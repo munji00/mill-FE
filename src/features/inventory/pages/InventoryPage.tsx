@@ -8,10 +8,12 @@ import {
   useDeleteInventoryMutation,
 } from "../api/inventoryApi";
 import { Plus, Edit2, Trash2, X, Search, Layers, ShieldAlert, AlertCircle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function InventoryPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetInventoryQuery();
+  const { t } = useLanguage();
   const [createInventory, { isLoading: isCreating }] = useCreateInventoryMutation();
   const [updateInventory, { isLoading: isUpdating }] = useUpdateInventoryMutation();
   const [deleteInventory] = useDeleteInventoryMutation();
@@ -107,9 +109,9 @@ export default function InventoryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Inventory Stock</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("inventory")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Audit raw paddy reserves, finished bags, byproducts, and set automated min-stock threshold alerts.
+            {t("inventory_desc")}
           </p>
         </div>
         <button
@@ -118,7 +120,7 @@ export default function InventoryPage() {
           className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
         >
           <Plus size={18} />
-          <span>New Stock Item</span>
+          <span>{t("add_inventory")}</span>
         </button>
       </div>
 
@@ -130,7 +132,7 @@ export default function InventoryPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search stock item name or category..."
+            placeholder={t("search_placeholder")}
             className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -155,12 +157,12 @@ export default function InventoryPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Item Name</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Stock Level</th>
-                  <th className="px-6 py-4">Min stock Alert Threshold</th>
+                  <th className="px-6 py-4">{t("item_name")}</th>
+                  <th className="px-6 py-4">{t("category")}</th>
+                  <th className="px-6 py-4">{t("stock_quantity")}</th>
+                  <th className="px-6 py-4">{t("min_stock_alert")}</th>
                   <th className="px-6 py-4">Status Alert</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">Actions</th>}
+                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -170,7 +172,7 @@ export default function InventoryPage() {
                     <tr key={rec.id} className="hover:bg-slate-50/60 transition">
                       <td className="px-6 py-4 font-bold text-slate-900">{rec.itemName}</td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800 border">
+                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
                           {rec.category}
                         </span>
                       </td>
@@ -198,14 +200,16 @@ export default function InventoryPage() {
                             <button
                               onClick={() => handleOpenEdit(rec)}
                               className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                              title="Edit Item"
                             >
-                              <Edit2 size={15} />
+                              <Edit2 size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(rec.id)}
                               className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete Item"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -234,7 +238,7 @@ export default function InventoryPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Stock Item Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("item_name")}</label>
                 <input
                   type="text"
                   required
@@ -247,7 +251,7 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Category</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("category")}</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as any)}
@@ -260,7 +264,7 @@ export default function InventoryPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Inventory Unit</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unit")}</label>
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
@@ -277,7 +281,7 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Current Stock Qty</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("stock_quantity")}</label>
                   <input
                     type="number"
                     required
@@ -288,7 +292,7 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Min Alert level</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("min_stock_alert")}</label>
                   <input
                     type="number"
                     required
@@ -306,14 +310,14 @@ export default function InventoryPage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating || isUpdating ? "Saving..." : editingRecord ? "Update Stock" : "Create Item"}
+                  {isCreating || isUpdating ? "Saving..." : editingRecord ? t("save_changes") : t("save_changes")}
                 </button>
               </div>
             </form>

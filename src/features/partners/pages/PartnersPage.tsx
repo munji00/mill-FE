@@ -3,10 +3,12 @@ import { useAppSelector } from "@/app/store/hooks";
 import { USER_ROLE } from "@/types";
 import { useGetPartnersQuery, useCreatePartnerMutation } from "../api/partnersApi";
 import { Plus, X, Search, ShieldAlert, User, Phone, Mail, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PartnersPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error, refetch } = useGetPartnersQuery();
+  const { t } = useLanguage();
   const [createPartner, { isLoading: isCreating }] = useCreatePartnerMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,9 +72,9 @@ export default function PartnersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Partners Directory</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("partners")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Register and manage multiple partners associated with this mill channel.
+            {t("partners_desc")}
           </p>
         </div>
         <button
@@ -81,7 +83,7 @@ export default function PartnersPage() {
           className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
         >
           <Plus size={18} />
-          <span>Register New Partner</span>
+          <span>{t("register_new_partner")}</span>
         </button>
       </div>
 
@@ -93,7 +95,7 @@ export default function PartnersPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search partner by name or email..."
+            placeholder={t("search_placeholder")}
             className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -118,9 +120,9 @@ export default function PartnersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Full Name</th>
-                  <th className="px-6 py-4">Email Address</th>
-                  <th className="px-6 py-4">Mobile / WhatsApp Number</th>
+                  <th className="px-6 py-4">{t("full_name")}</th>
+                  <th className="px-6 py-4">{t("email_address")}</th>
+                  <th className="px-6 py-4">{t("mobile_whatsapp")}</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
@@ -148,7 +150,7 @@ export default function PartnersPage() {
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
                         <CheckCircle2 size={10} className="mr-1" />
-                        Active
+                        {t("active")}
                       </span>
                     </td>
                   </tr>
@@ -174,7 +176,7 @@ export default function PartnersPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Full Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("full_name")}</label>
                 <input
                   type="text"
                   required
@@ -186,7 +188,7 @@ export default function PartnersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Address</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("email_address")}</label>
                 <input
                   type="email"
                   required
@@ -198,7 +200,7 @@ export default function PartnersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mobile / WhatsApp Number</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("mobile_whatsapp")}</label>
                 <input
                   type="text"
                   required
@@ -210,7 +212,7 @@ export default function PartnersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Password</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("password")}</label>
                 <input
                   type="password"
                   required
@@ -228,14 +230,14 @@ export default function PartnersPage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating ? "Registering..." : "Register Partner"}
+                  {isCreating ? "Registering..." : t("register_partner")}
                 </button>
               </div>
             </form>

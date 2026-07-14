@@ -8,10 +8,12 @@ import {
   useDeletePurchaseMutation,
 } from "../api/purchaseApi";
 import { Plus, Edit2, Trash2, X, Search, Calendar, Landmark, ShoppingBag, ShieldAlert } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PurchasePage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetPurchasesQuery();
+  const { t } = useLanguage();
   const [createPurchase, { isLoading: isCreating }] = useCreatePurchaseMutation();
   const [updatePurchase, { isLoading: isUpdating }] = useUpdatePurchaseMutation();
   const [deletePurchase] = useDeletePurchaseMutation();
@@ -112,9 +114,9 @@ export default function PurchasePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Paddy Purchases</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("purchases")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Log and manage incoming paddy grains, packaging supplies, and stock intake.
+            {t("purchases_desc")}
           </p>
         </div>
         <button
@@ -123,7 +125,7 @@ export default function PurchasePage() {
           className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
         >
           <Plus size={18} />
-          <span>New Purchase Record</span>
+          <span>{t("add_purchase")}</span>
         </button>
       </div>
 
@@ -135,7 +137,7 @@ export default function PurchasePage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search supplier or grain type..."
+            placeholder={t("search_placeholder")}
             className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -160,13 +162,13 @@ export default function PurchasePage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Item details</th>
-                  <th className="px-6 py-4">Supplier / Farmer</th>
-                  <th className="px-6 py-4">Quantity / Unit</th>
-                  <th className="px-6 py-4">Price / Unit</th>
-                  <th className="px-6 py-4">Total Amount</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">Actions</th>}
+                  <th className="px-6 py-4">{t("date")}</th>
+                  <th className="px-6 py-4">{t("item_name")}</th>
+                  <th className="px-6 py-4">{t("supplier_name")}</th>
+                  <th className="px-6 py-4">{t("quantity")} / {t("unit")}</th>
+                  <th className="px-6 py-4">{t("price_per_unit")}</th>
+                  <th className="px-6 py-4">{t("amount")}</th>
+                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -196,14 +198,16 @@ export default function PurchasePage() {
                           <button
                             onClick={() => handleOpenEdit(rec)}
                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                            title="Edit Record"
                           >
-                            <Edit2 size={15} />
+                            <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(rec.id)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Delete Record"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -231,7 +235,7 @@ export default function PurchasePage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Grain / Item Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("item_name")}</label>
                 <select
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
@@ -247,7 +251,7 @@ export default function PurchasePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Quantity</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("quantity")}</label>
                   <input
                     type="number"
                     required
@@ -258,7 +262,7 @@ export default function PurchasePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Unit</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unit")}</label>
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
@@ -275,7 +279,7 @@ export default function PurchasePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Price per Unit (Rs.)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("price_per_unit")}</label>
                   <input
                     type="number"
                     required
@@ -286,7 +290,7 @@ export default function PurchasePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Log Date</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("date")}</label>
                   <input
                     type="date"
                     required
@@ -298,7 +302,7 @@ export default function PurchasePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Farmer / Supplier Agency</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("supplier_name")}</label>
                 <input
                   type="text"
                   required
@@ -322,14 +326,14 @@ export default function PurchasePage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating || isUpdating ? "Logging..." : editingRecord ? "Update Log" : "Log Record"}
+                  {isCreating || isUpdating ? "Logging..." : editingRecord ? t("save_changes") : t("save_changes")}
                 </button>
               </div>
             </form>

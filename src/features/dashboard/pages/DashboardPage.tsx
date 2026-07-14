@@ -30,11 +30,13 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import { PATHS } from "@/app/router/paths";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DashboardPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: statsResponse, isLoading, error } = useGetDashboardStatsQuery();
-  const [timeframe, setTimeframe] = useState("30"); // "7", "30", "today"
+  const [timeframe, setTimeframe] = useState("30");
+  const { t } = useLanguage();
 
   if (!user) return null;
 
@@ -77,6 +79,34 @@ export default function DashboardPage() {
     }).format(val);
   };
 
+  const renderActivityMsg = (act: { type: string; msg: string }) => {
+    if (act.type === "Sale") {
+      const match = act.msg.match(/Sold (\d+) bags of (.+) for Rs\.(\d+)/i);
+      if (match) {
+        return t("activity_sold")
+          .replace("{quantity}", match[1])
+          .replace("{itemName}", match[2])
+          .replace("{amount}", Number(match[3]).toLocaleString("en-IN"));
+      }
+    } else if (act.type === "Purchase") {
+      const match = act.msg.match(/Bought (\d+) bags of (.+) for Rs\.(\d+)/i);
+      if (match) {
+        return t("activity_bought")
+          .replace("{quantity}", match[1])
+          .replace("{itemName}", match[2])
+          .replace("{amount}", Number(match[3]).toLocaleString("en-IN"));
+      }
+    } else if (act.type === "Expense") {
+      const match = act.msg.match(/Paid Rs\.(\d+) for (.+)/i);
+      if (match) {
+        return t("activity_paid")
+          .replace("{amount}", Number(match[1]).toLocaleString("en-IN"))
+          .replace("{category}", match[2]);
+      }
+    }
+    return act.msg;
+  };
+
   // 1. MASTER ADMIN DASHBOARD VIEW
   if (isMasterAdmin) {
     return (
@@ -84,9 +114,9 @@ export default function DashboardPage() {
         {/* Welcome and Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Welcome, Super Admin!</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("global_admin_header")}</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Overview of all registered mill parties, tenant growth, and platform health.
+              {t("dashboard_desc")}
             </p>
           </div>
           <Link
@@ -94,7 +124,7 @@ export default function DashboardPage() {
             className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition-all cursor-pointer"
           >
             <Plus size={18} />
-            <span>Manage Mill Parties</span>
+            <span>{t("provision_new_party")}</span>
           </Link>
         </div>
 
@@ -102,7 +132,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Registered Parties</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("total_parties")}</p>
               <h3 className="text-3xl font-extrabold text-slate-900 mt-2">{stats.totalParties}</h3>
               <div className="flex items-center text-xs text-emerald-600 font-bold mt-2">
                 <ArrowUpRight size={14} className="mr-1" />
@@ -116,7 +146,7 @@ export default function DashboardPage() {
 
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Tenants</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("active_parties")}</p>
               <h3 className="text-3xl font-extrabold text-slate-900 mt-2">{stats.activeParties}</h3>
               <div className="flex items-center text-xs text-emerald-600 font-bold mt-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
@@ -209,10 +239,10 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Hello, {user.fullName}!
+            {t("hello")}, {user.fullName}!
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Mill Party: <span className="font-extrabold text-blue-600">{user.tenant?.name}</span> (Code: {user.tenant?.code})
+            {t("mill_party")}: <span className="font-extrabold text-blue-600">{user.tenant?.name}</span> (Code: {user.tenant?.code})
           </p>
         </div>
 
@@ -224,10 +254,10 @@ export default function DashboardPage() {
             onChange={(e) => setTimeframe(e.target.value)}
             className="text-xs font-bold text-slate-600 bg-transparent border-none focus:outline-none pr-6 cursor-pointer"
           >
-            <option value="today">Today</option>
-            <option value="7">Last 7 Days</option>
-            <option value="30">Last 30 Days</option>
-            <option value="all">Custom (All-Time)</option>
+            <option value="today">{t("today")}</option>
+            <option value="7">{t("last_7_days")}</option>
+            <option value="30">{t("last_30_days")}</option>
+            <option value="all">{t("custom_all_time")}</option>
           </select>
         </div>
       </div>
@@ -238,8 +268,8 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm p-5 border border-slate-100 hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gross Sales</p>
-              <h3 className="text-2xl font-extrabold text-slate-950 mt-1.5">{formatCurrency(summary.totalSales)}</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("total_sales")}</p>
+              <h3 className="text-2xl font-extrabold text-slate-955 mt-1.5">{formatCurrency(summary.totalSales)}</h3>
             </div>
             <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg">
               <TrendingUp size={20} />
@@ -247,7 +277,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center text-[10px] text-emerald-600 font-bold mt-3">
             <ArrowUpRight size={12} className="mr-0.5" />
-            <span>+12.4% vs last month</span>
+            <span>+12.4% {t("vs_last_month")}</span>
           </div>
         </div>
 
@@ -255,15 +285,15 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm p-5 border border-slate-100 hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Raw Paddy Purchases</p>
-              <h3 className="text-2xl font-extrabold text-slate-950 mt-1.5">{formatCurrency(summary.totalPurchase)}</h3>
+              <p className="text-[10px] font-bold text-[slate-400] uppercase tracking-wider">{t("total_purchase")}</p>
+              <h3 className="text-2xl font-extrabold text-slate-955 mt-1.5">{formatCurrency(summary.totalPurchase)}</h3>
             </div>
             <div className="bg-blue-50 text-blue-600 p-3 rounded-lg">
               <ShoppingBag size={20} />
             </div>
           </div>
           <div className="flex items-center text-[10px] text-blue-600 font-bold mt-3">
-            <span>Procured Paddy Materials</span>
+            <span>{t("procured_paddy_materials")}</span>
           </div>
         </div>
 
@@ -271,8 +301,8 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm p-5 border border-slate-100 hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expenses & Wages</p>
-              <h3 className="text-2xl font-extrabold text-slate-950 mt-1.5">{formatCurrency(summary.totalExpenses)}</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("total_expenses")}</p>
+              <h3 className="text-2xl font-extrabold text-slate-955 mt-1.5">{formatCurrency(summary.totalExpenses)}</h3>
             </div>
             <div className="bg-red-50 text-red-600 p-3 rounded-lg">
               <DollarSign size={20} />
@@ -280,7 +310,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center text-[10px] text-red-600 font-bold mt-3">
             <ArrowDownRight size={12} className="mr-0.5" />
-            <span>Operational costs + daily wages</span>
+            <span>{t("operational_cost_daily_wages")}</span>
           </div>
         </div>
 
@@ -288,7 +318,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm p-5 border border-slate-100 hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Calculated Net Profit</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("net_profit")}</p>
               <h3 className={`text-2xl font-extrabold mt-1.5 ${summary.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {formatCurrency(summary.netProfit)}
               </h3>
@@ -298,7 +328,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center text-[10px] font-bold mt-3 text-slate-500">
-            <span>Sales - Purchase - Expenses - Wages</span>
+            <span>{t("net_profit_formula")}</span>
           </div>
         </div>
       </div>
@@ -336,6 +366,7 @@ export default function DashboardPage() {
                 <Area
                   type="monotone"
                   dataKey="Sales"
+                  name={t("sales")}
                   stroke="#10b981"
                   strokeWidth={2.5}
                   fillOpacity={1}
@@ -344,6 +375,7 @@ export default function DashboardPage() {
                 <Area
                   type="monotone"
                   dataKey="Expenses"
+                  name={t("expenses")}
                   stroke="#ef4444"
                   strokeWidth={2.5}
                   fillOpacity={1}
@@ -358,7 +390,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* Inventory & Labour Snapshot */}
           <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
-            <h3 className="text-base font-extrabold text-slate-800 mb-4">Operations Snapshot</h3>
+            <h3 className="text-base font-extrabold text-slate-800 mb-4">{t("operations_snapshot")}</h3>
             <div className="divide-y divide-slate-100">
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center space-x-3">
@@ -366,8 +398,8 @@ export default function DashboardPage() {
                     <Layers size={18} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-800">Inventory Items</h4>
-                    <p className="text-[10px] text-slate-400">Stocked materials & byproducts</p>
+                    <h4 className="text-sm font-semibold text-slate-800">{t("inventory_items")}</h4>
+                    <p className="text-[10px] text-slate-400">{t("stocked_materials_byproducts")}</p>
                   </div>
                 </div>
                 <span className="text-base font-extrabold text-slate-800">{summary.inventoryItemCount}</span>
@@ -379,8 +411,8 @@ export default function DashboardPage() {
                     <Briefcase size={18} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-800">Active Labour force</h4>
-                    <p className="text-[10px] text-slate-400">Operators, loaders & checkers</p>
+                    <h4 className="text-sm font-semibold text-slate-800">{t("active_labour_force")}</h4>
+                    <p className="text-[10px] text-slate-400">{t("operators_loaders_checkers")}</p>
                   </div>
                 </div>
                 <span className="text-base font-extrabold text-slate-800">{summary.labourCount}</span>
@@ -394,9 +426,9 @@ export default function DashboardPage() {
               <AlertTriangle size={18} />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">System Alert</h4>
+              <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">{t("system_alert")}</h4>
               <p className="text-xs text-amber-700 leading-relaxed mt-1">
-                Paddy Raw Basmati (1121) is near minimal stock levels. Advise purchase manager to initiate farmer procurement.
+                {t("system_alert_desc")}
               </p>
             </div>
           </div>
@@ -408,8 +440,8 @@ export default function DashboardPage() {
         {/* Recent Transactions List */}
         <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-extrabold text-slate-800">Recent Transactions</h3>
-            <span className="text-xs text-slate-500 font-semibold">Latest 5 records</span>
+            <h3 className="text-base font-extrabold text-slate-800">{t("recent_transactions")}</h3>
+            <span className="text-xs text-slate-500 font-semibold">{t("latest_5_records")}</span>
           </div>
 
           <div className="flow-root">
@@ -429,7 +461,7 @@ export default function DashboardPage() {
                       <Activity size={16} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{act.msg}</p>
+                      <p className="text-sm font-semibold text-slate-800 truncate">{renderActivityMsg(act)}</p>
                       <p className="text-xs text-slate-400 mt-0.5">{act.date} // Type: {act.type}</p>
                     </div>
                   </div>
@@ -442,8 +474,8 @@ export default function DashboardPage() {
         {/* Quick Module Shortcuts */}
         <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-extrabold text-slate-800 mb-2">Shortcut Operations</h3>
-            <p className="text-xs text-slate-400 mb-6">Access dedicated panels for specific logging.</p>
+            <h3 className="text-base font-extrabold text-slate-800 mb-2">{t("shortcut_operations")}</h3>
+            <p className="text-xs text-slate-400 mb-6">{t("shortcut_operations_desc")}</p>
             
             <div className="grid grid-cols-2 gap-3">
               <Link
@@ -451,34 +483,34 @@ export default function DashboardPage() {
                 className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-blue-500/20 hover:bg-blue-50/10 transition text-center cursor-pointer"
               >
                 <span className="text-lg mb-1">🛒</span>
-                <span className="text-xs font-bold text-slate-700">Purchases</span>
+                <span className="text-xs font-bold text-slate-700">{t("purchases")}</span>
               </Link>
               <Link
                 to={PATHS.SALES}
                 className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-emerald-500/20 hover:bg-emerald-50/10 transition text-center cursor-pointer"
               >
                 <span className="text-lg mb-1">📈</span>
-                <span className="text-xs font-bold text-slate-700">Sales</span>
+                <span className="text-xs font-bold text-slate-700">{t("sales")}</span>
               </Link>
               <Link
                 to={PATHS.EXPENSES}
                 className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-red-500/20 hover:bg-red-50/10 transition text-center cursor-pointer"
               >
                 <span className="text-lg mb-1">💸</span>
-                <span className="text-xs font-bold text-slate-700">Expenses</span>
+                <span className="text-xs font-bold text-slate-700">{t("expenses")}</span>
               </Link>
               <Link
                 to={PATHS.INVENTORY}
                 className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-amber-500/20 hover:bg-amber-50/10 transition text-center cursor-pointer"
               >
                 <span className="text-lg mb-1">📦</span>
-                <span className="text-xs font-bold text-slate-700">Inventory</span>
+                <span className="text-xs font-bold text-slate-700">{t("inventory")}</span>
               </Link>
             </div>
           </div>
 
           <div className="mt-6 text-[10px] text-slate-400 border-t border-slate-100 pt-4 text-center">
-            {isPartner ? "🔒 PARTNER ACCESS (VIEW-ONLY)" : "⚡ FULL ADMIN CONTROLS ENABLED"}
+            {isPartner ? t("partner_access_view_only") : t("full_admin_controls_enabled")}
           </div>
         </div>
       </div>

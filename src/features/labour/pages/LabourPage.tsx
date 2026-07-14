@@ -8,10 +8,12 @@ import {
   useDeleteLabourMutation,
 } from "../api/labourApi";
 import { Plus, Edit2, Trash2, X, Search, UserCheck, Briefcase, Phone, ShieldAlert } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LabourPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetLabourQuery();
+  const { t } = useLanguage();
   const [createLabour, { isLoading: isCreating }] = useCreateLabourMutation();
   const [updateLabour, { isLoading: isUpdating }] = useUpdateLabourMutation();
   const [deleteLabour] = useDeleteLabourMutation();
@@ -111,9 +113,9 @@ export default function LabourPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Labour Management</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("labour_manage")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Register daily wage workers, verify active operators, track present days, and manage dues payouts.
+            {t("labour_desc")}
           </p>
         </div>
         <button
@@ -122,7 +124,7 @@ export default function LabourPage() {
           className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
         >
           <Plus size={18} />
-          <span>Register New Worker</span>
+          <span>{t("add_labour")}</span>
         </button>
       </div>
 
@@ -134,7 +136,7 @@ export default function LabourPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search worker name or designation..."
+            placeholder={t("search_placeholder")}
             className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -159,27 +161,31 @@ export default function LabourPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Worker Name</th>
-                  <th className="px-6 py-4">Designation</th>
-                  <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">Daily Wage</th>
-                  <th className="px-6 py-4">Present Days</th>
-                  <th className="px-6 py-4">Total Wages</th>
-                  <th className="px-6 py-4">Unpaid Dues</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">Actions</th>}
+                  <th className="px-6 py-4">{t("full_name")}</th>
+                  <th className="px-6 py-4">{t("designation")}</th>
+                  <th className="px-6 py-4">{t("contact")}</th>
+                  <th className="px-6 py-4">{t("wage")}</th>
+                  <th className="px-6 py-4">{t("present_days")}</th>
+                  <th className="px-6 py-4">{t("total_wages")}</th>
+                  <th className="px-6 py-4">{t("unpaid_dues")}</th>
+                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredRecords.map((rec) => (
                   <tr key={rec.id} className="hover:bg-slate-50/60 transition">
                     <td className="px-6 py-4 font-bold text-slate-900">{rec.name}</td>
-                    <td className="px-6 py-4 text-slate-600 flex items-center space-x-2">
-                      <Briefcase size={14} className="text-slate-400" />
-                      <span>{rec.role}</span>
+                    <td className="px-6 py-4 text-slate-600">
+                      <div className="flex items-center space-x-2">
+                        <Briefcase size={14} className="text-slate-400" />
+                        <span>{rec.role}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono flex items-center space-x-2">
-                      <Phone size={14} className="text-slate-400" />
-                      <span>{rec.contact}</span>
+                    <td className="px-6 py-4 text-slate-500 font-mono">
+                      <div className="flex items-center space-x-2">
+                        <Phone size={14} className="text-slate-400" />
+                        <span>{rec.contact}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 font-mono text-slate-700">
                       Rs. {rec.dailyWage}
@@ -207,14 +213,16 @@ export default function LabourPage() {
                           <button
                             onClick={() => handleOpenEdit(rec)}
                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                            title="Edit Record"
                           >
-                            <Edit2 size={15} />
+                            <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(rec.id)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Delete Record"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -242,7 +250,7 @@ export default function LabourPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Worker Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("full_name")}</label>
                 <input
                   type="text"
                   required
@@ -269,7 +277,7 @@ export default function LabourPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Contact Number</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("contact")}</label>
                   <input
                     type="text"
                     required
@@ -283,7 +291,7 @@ export default function LabourPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Daily Wage (Rs.)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("wage")}</label>
                   <input
                     type="number"
                     required
@@ -294,7 +302,7 @@ export default function LabourPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Present Days</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("present_days")}</label>
                   <input
                     type="number"
                     required
@@ -306,7 +314,7 @@ export default function LabourPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Pending Dues</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unpaid_dues")}</label>
                   <input
                     type="number"
                     required
@@ -331,14 +339,14 @@ export default function LabourPage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating || isUpdating ? "Saving..." : editingRecord ? "Update Profile" : "Register Worker"}
+                  {isCreating || isUpdating ? "Saving..." : editingRecord ? t("save_changes") : t("save_changes")}
                 </button>
               </div>
             </form>

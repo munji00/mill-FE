@@ -1,11 +1,13 @@
 import { useAppSelector } from "@/app/store/hooks";
 import { useGetNotificationsQuery, useMarkAsReadMutation } from "../api/notificationApi";
 import { Bell, Check, MessageSquare, Clock } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function NotificationPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetNotificationsQuery();
   const [markAsRead] = useMarkAsReadMutation();
+  const { t } = useLanguage();
 
   if (!user) return null;
 
@@ -23,24 +25,24 @@ export default function NotificationPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Notifications & Broadcasts Audit</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("notifications_audit")}</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Historical ledger of changes made by the Admin and automated WhatsApp broadcast alerts dispatched to partners.
+          {t("notifications_audit_desc")}
         </p>
       </div>
 
       {/* Main List */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-500 font-medium">Fetching notifications log...</div>
+        <div className="text-center py-12 text-slate-500 font-medium">{t("fetching_notifications")}</div>
       ) : error ? (
         <div className="bg-red-50 text-red-800 p-6 rounded-xl border border-red-200 text-center">
-          Failed to load notifications log.
+          {t("failed_notifications")}
         </div>
       ) : notifications.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-slate-100">
           <Bell className="mx-auto text-slate-300 mb-4" size={48} />
-          <h3 className="text-lg font-bold text-slate-800">No Notifications</h3>
-          <p className="text-sm text-slate-400 mt-1">Your notification box is currently empty.</p>
+          <h3 className="text-lg font-bold text-slate-800">{t("no_notifications")}</h3>
+          <p className="text-sm text-slate-400 mt-1">{t("no_notifications_desc")}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -82,7 +84,7 @@ export default function NotificationPage() {
                       <MessageSquare className="text-emerald-600 shrink-0 mt-0.5" size={14} />
                       <div className="text-[11px] text-emerald-800 space-y-1 leading-relaxed">
                         <span className="font-extrabold uppercase tracking-wide text-emerald-900 block">
-                          Simulated WhatsApp Dispatch Status:
+                          {t("wa_dispatch_status")}:
                         </span>
                         <p className="font-mono text-emerald-700 select-all">
                           {not.whatsappMessageDetails}
@@ -100,7 +102,7 @@ export default function NotificationPage() {
                   className="flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-lg transition shrink-0 cursor-pointer"
                 >
                   <Check size={14} />
-                  <span>Mark Read</span>
+                  <span>{t("mark_read")}</span>
                 </button>
               )}
             </div>

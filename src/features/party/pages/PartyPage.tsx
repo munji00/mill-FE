@@ -7,13 +7,15 @@ import {
   useUpdatePartyMutation,
   useDeletePartyMutation,
 } from "../api/partyApi";
-import { ShieldAlert, Plus, Edit2, Trash2, X, Factory, CreditCard, Mail, Phone, MapPin, User as UserIcon } from "lucide-react";
+import { ShieldAlert, Plus, Edit2, Trash2, X, Factory, Mail, Phone, MapPin, User as UserIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PartyPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: partiesResponse, isLoading, error } = useGetPartiesQuery(undefined, {
     skip: user?.role !== USER_ROLE.MASTER_ADMIN,
   });
+  const { t } = useLanguage();
 
   const [createParty, { isLoading: isCreating }] = useCreatePartyMutation();
   const [updateParty, { isLoading: isUpdating }] = useUpdatePartyMutation();
@@ -143,9 +145,9 @@ export default function PartyPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mill Parties (Tenants)</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("parties")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Global administrative control panel to provision and manage distinct mill channels.
+            {t("parties_desc")}
           </p>
         </div>
         <button
@@ -246,18 +248,24 @@ export default function PartyPage() {
                     <td className="px-6 py-4">
                       {party.subscription ? (
                         <div>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                            <CreditCard size={10} className="mr-1" />
-                            {party.subscription.type.replace("_", " ")}
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded font-bold text-xs ${
+                              party.subscription.isActive
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                : "bg-red-50 text-red-700 border border-red-100"
+                            }`}
+                          >
+                            {party.subscription.isActive ? "ACTIVE" : "EXPIRED"}
                           </span>
-                          <span className="block text-[10px] font-bold text-slate-500 mt-1">
-                            Expires: {new Date(party.subscription.nextSubscription).toLocaleDateString()}
+                          <span className="block text-[10px] text-slate-400 mt-1 uppercase font-semibold">
+                            Type: {party.subscription.type}
+                          </span>
+                          <span className="block text-[10px] text-slate-400 mt-0.5">
+                            Expires: {party.subscription.nextSubscription ? new Date(party.subscription.nextSubscription).toLocaleDateString() : "-"}
                           </span>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-                          Inactive
-                        </span>
+                        <span className="text-slate-400 italic">No Subscription</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -265,14 +273,14 @@ export default function PartyPage() {
                         <button
                           onClick={() => handleOpenEdit(party)}
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                          title="Edit Details"
+                          title="Edit Party"
                         >
                           <Edit2 size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(party.id)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                          title="Terminate Party"
+                          title="Delete Party"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -307,7 +315,7 @@ export default function PartyPage() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mill Name</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("mill_name")}</label>
                     <input
                       type="text"
                       required
@@ -318,7 +326,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Tenant Code</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("tenant_code")}</label>
                     <input
                       type="text"
                       required
@@ -330,7 +338,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Register Number</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("register_number")}</label>
                     <input
                       type="text"
                       value={registerNumber}
@@ -349,7 +357,7 @@ export default function PartyPage() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Owner Name</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("owner_name")}</label>
                     <input
                       type="text"
                       value={ownerName}
@@ -359,7 +367,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Owner Mobile</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("owner_mobile")}</label>
                     <input
                       type="text"
                       value={ownerMobile}
@@ -369,7 +377,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mill Email</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("email_address")}</label>
                     <input
                       type="email"
                       value={email}
@@ -379,7 +387,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mill Contact</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("contact_number")}</label>
                     <input
                       type="text"
                       value={contactNumber}
@@ -398,7 +406,7 @@ export default function PartyPage() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">State</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("state")}</label>
                     <input
                       type="text"
                       value={stateName}
@@ -408,7 +416,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">City</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("city")}</label>
                     <input
                       type="text"
                       value={city}
@@ -418,7 +426,7 @@ export default function PartyPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Town / Village</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("town_village")}</label>
                     <input
                       type="text"
                       value={townOrVillage}
@@ -459,14 +467,14 @@ export default function PartyPage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating || isUpdating ? "Saving..." : editingParty ? "Save Changes" : "Provision Channel"}
+                  {isCreating || isUpdating ? "Saving..." : editingParty ? t("save_changes") : t("save_changes")}
                 </button>
               </div>
             </form>

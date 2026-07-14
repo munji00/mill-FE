@@ -8,10 +8,12 @@ import {
   useDeleteExpenseMutation,
 } from "../api/expensesApi";
 import { Plus, Edit2, Trash2, X, Search, Calendar, FileText, DollarSign, ShieldAlert } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ExpensesPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetExpensesQuery();
+  const { t } = useLanguage();
   const [createExpense, { isLoading: isCreating }] = useCreateExpenseMutation();
   const [updateExpense, { isLoading: isUpdating }] = useUpdateExpenseMutation();
   const [deleteExpense] = useDeleteExpenseMutation();
@@ -103,9 +105,9 @@ export default function ExpensesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Operating Expenses</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("expenses")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Log mill electricity bills, boiler maintenance costs, fuels, and general overhead.
+            {t("expenses_desc")}
           </p>
         </div>
         <button
@@ -114,7 +116,7 @@ export default function ExpensesPage() {
           className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
         >
           <Plus size={18} />
-          <span>New Expense Record</span>
+          <span>{t("add_expense")}</span>
         </button>
       </div>
 
@@ -126,7 +128,7 @@ export default function ExpensesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search category or description..."
+            placeholder={t("search_placeholder")}
             className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -151,11 +153,11 @@ export default function ExpensesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4">Amount Paid</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">Actions</th>}
+                  <th className="px-6 py-4">{t("date")}</th>
+                  <th className="px-6 py-4">{t("category")}</th>
+                  <th className="px-6 py-4">{t("description")}</th>
+                  <th className="px-6 py-4">{t("amount")}</th>
+                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -165,7 +167,7 @@ export default function ExpensesPage() {
                       <Calendar size={14} className="text-slate-400" />
                       <span>{rec.date}</span>
                     </td>
-                    <td className="px-6 py-4 font-bold text-slate-950">{rec.category}</td>
+                    <td className="px-6 py-4 font-bold text-slate-955">{rec.category}</td>
                     <td className="px-6 py-4 text-slate-600 flex items-center space-x-2">
                       <FileText size={14} className="text-slate-400" />
                       <span>{rec.description}</span>
@@ -179,14 +181,16 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => handleOpenEdit(rec)}
                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                            title="Edit Record"
                           >
-                            <Edit2 size={15} />
+                            <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(rec.id)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Delete Record"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -214,7 +218,7 @@ export default function ExpensesPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Category</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("category")}</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -232,7 +236,7 @@ export default function ExpensesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Amount (Rs.)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("amount")}</label>
                   <input
                     type="number"
                     required
@@ -243,7 +247,7 @@ export default function ExpensesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Payment Date</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("date")}</label>
                   <input
                     type="date"
                     required
@@ -255,7 +259,7 @@ export default function ExpensesPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Description details</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("description")}</label>
                 <textarea
                   required
                   rows={3}
@@ -272,14 +276,14 @@ export default function ExpensesPage() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
                 >
-                  {isCreating || isUpdating ? "Logging..." : editingRecord ? "Update Log" : "Log Expense"}
+                  {isCreating || isUpdating ? "Logging..." : editingRecord ? t("save_changes") : t("save_changes")}
                 </button>
               </div>
             </form>

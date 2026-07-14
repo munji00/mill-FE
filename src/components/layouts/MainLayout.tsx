@@ -20,6 +20,7 @@ import {
   Settings,
   ChevronUp,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -37,6 +38,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { language, setLanguage, t } = useLanguage();
   
   const [whatsappAlerts, setWhatsappAlerts] = useState<WhatsAppAlert[]>([]);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -89,22 +91,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Build sidebar menu items based on role
   const menuItems = isMasterAdmin
     ? [
-        { path: PATHS.DASHBOARD, label: "Global Dashboard", icon: LayoutDashboard },
-        { path: PATHS.PARTY, label: "Parties Management", icon: Users },
+        { path: PATHS.DASHBOARD, label: t("global_dashboard"), icon: LayoutDashboard },
+        { path: PATHS.PARTY, label: t("parties_management"), icon: Users },
       ]
     : [
-        { path: PATHS.DASHBOARD, label: "Party Dashboard", icon: LayoutDashboard },
-        { path: PATHS.PURCHASE, label: "Purchases", icon: ShoppingBag },
-        { path: PATHS.SALES, label: "Sales", icon: TrendingUp },
-        { path: PATHS.EXPENSES, label: "Expenses", icon: DollarSign },
-        { path: PATHS.LABOUR, label: "Labour Manage", icon: Briefcase },
-        { path: PATHS.INVENTORY, label: "Inventory", icon: Layers },
-        { path: PATHS.PARTNERS, label: "Partners", icon: Users },
-        { path: PATHS.NOTIFICATIONS, label: "Notifications", icon: Bell },
+        { path: PATHS.DASHBOARD, label: t("party_dashboard"), icon: LayoutDashboard },
+        { path: PATHS.PURCHASE, label: t("purchases"), icon: ShoppingBag },
+        { path: PATHS.SALES, label: t("sales"), icon: TrendingUp },
+        { path: PATHS.EXPENSES, label: t("expenses"), icon: DollarSign },
+        { path: PATHS.LABOUR, label: t("labour_manage"), icon: Briefcase },
+        { path: PATHS.INVENTORY, label: t("inventory"), icon: Layers },
+        { path: PATHS.PARTNERS, label: t("partners"), icon: Users },
+        { path: PATHS.NOTIFICATIONS, label: t("notifications"), icon: Bell },
       ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans" dir="ltr">
       {/* Sidebar - Permanently visible, light-themed */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
         {/* Sidebar Header */}
@@ -115,7 +117,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
             <div>
               <h1 className="font-extrabold text-slate-800 text-md tracking-wider leading-none">
-                RICE MILL ERP
+                {t("app_title")}
               </h1>
               <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">
                 {isMasterAdmin ? "Global Operations" : user.tenant?.name || "Single Party"}
@@ -159,7 +161,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 className="flex items-center space-x-3 w-full px-4 py-2.5 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer"
               >
                 <Settings size={14} className="text-slate-400" />
-                <span>Settings</span>
+                <span>{t("settings")}</span>
               </button>
               <div className="border-t border-slate-100 my-1"></div>
               <button
@@ -170,7 +172,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 className="flex items-center space-x-3 w-full px-4 py-2.5 hover:bg-red-50 text-red-600 text-xs font-semibold transition cursor-pointer"
               >
                 <LogOut size={14} />
-                <span>Sign Out</span>
+                <span>{t("sign_out")}</span>
               </button>
             </div>
           )}
@@ -198,7 +200,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden" dir={language === "ur" ? "rtl" : "ltr"}>
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shadow-sm z-10">
           <div className="flex items-center space-x-3">
@@ -207,16 +209,27 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 {isMasterAdmin ? (
                   <>
                     <ShieldCheck className="text-blue-600" size={22} />
-                    <span>Global Administrative Command</span>
+                    <span>{t("global_admin_header")}</span>
                   </>
                 ) : (
-                  <span>{user.tenant?.name} Dashboard</span>
+                  <span>{(user.tenant?.name || "Single Party") + " " + t("dashboard")}</span>
                 )}
               </h2>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Language Selector Selector */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as any)}
+              className="text-xs font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer text-slate-700"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="ur">اردو (Urdu)</option>
+            </select>
+
             {/* Quick badges */}
             {!isMasterAdmin && (
               <span
