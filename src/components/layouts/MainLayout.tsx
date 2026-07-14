@@ -200,7 +200,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden" dir={language === "ur" ? "rtl" : "ltr"}>
+      <div className="flex-1 flex flex-col overflow-hidden" dir="ltr">
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shadow-sm z-10">
           <div className="flex items-center space-x-3">
