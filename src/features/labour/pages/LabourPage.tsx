@@ -7,13 +7,14 @@ import {
   useUpdateLabourMutation,
   useDeleteLabourMutation,
 } from "../api/labourApi";
-import { Plus, Edit2, Trash2, X, Search, UserCheck, Briefcase, Phone, ShieldAlert } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Search, UserCheck, Briefcase, Phone, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { downloadPDF } from "@/utils/pdfHelper";
 
 export default function LabourPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { data: response, isLoading, error } = useGetLabourQuery();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [createLabour, { isLoading: isCreating }] = useCreateLabourMutation();
   const [updateLabour, { isLoading: isUpdating }] = useUpdateLabourMutation();
   const [deleteLabour] = useDeleteLabourMutation();
@@ -21,6 +22,16 @@ export default function LabourPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
+
+  const handleDownloadPDF = () => {
+    downloadPDF("labour-table-container", `${user?.tenant?.name || "Mill"}_Labour_Report`, {
+      title: t("labour_manage"),
+      subtitle: t("labour_desc"),
+      tenantName: user?.tenant?.name,
+      tenantCode: user?.tenant?.code,
+      language: language,
+    });
+  };
 
   // Form Fields
   const [name, setName] = useState("");
@@ -118,14 +129,23 @@ export default function LabourPage() {
             {t("labour_desc")}
           </p>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          disabled={isPartner}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
-        >
-          <Plus size={18} />
-          <span>{t("add_labour")}</span>
-        </button>
+        <div className="flex space-x-3 items-center">
+          <button
+            onClick={handleDownloadPDF}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+          >
+            <Download size={18} />
+            <span>{t("download_report")}</span>
+          </button>
+          <button
+            onClick={handleOpenAdd}
+            disabled={isPartner}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+          >
+            <Plus size={18} />
+            <span>{t("add_labour")}</span>
+          </button>
+        </div>
       </div>
 
       {/* Table Filters */}
@@ -156,7 +176,7 @@ export default function LabourPage() {
           <p className="text-sm text-slate-400 mt-1">No profiles found matching your search term.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div id="labour-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>

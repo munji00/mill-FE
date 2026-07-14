@@ -146,6 +146,7 @@ const translations: Record<Language, Record<string, string>> = {
     net_profit_formula: "Sales - Purchase - Expenses - Wages",
     designation: "Designation",
     total_wages: "Total Wages",
+    download_report: "Download PDF Report",
   },
   hi: {
     // Sidebar & Menus
@@ -284,6 +285,7 @@ const translations: Record<Language, Record<string, string>> = {
     net_profit_formula: "बिक्री - खरीद - खर्च - मजदूरी",
     designation: "पद",
     total_wages: "कुल मजदूरी",
+    download_report: "पीडीएफ रिपोर्ट डाउनलोड करें",
   },
   ur: {
     // Sidebar & Menus
@@ -422,6 +424,7 @@ const translations: Record<Language, Record<string, string>> = {
     net_profit_formula: "فروخت - خریداری - اخراجات - مزدور",
     designation: "عہدہ",
     total_wages: "کل اجرت",
+    download_report: "پی ڈی ایف رپورٹ ڈاؤن لوڈ کریں",
   },
 };
 
