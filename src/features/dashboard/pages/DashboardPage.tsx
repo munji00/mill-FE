@@ -6,9 +6,7 @@ import {
   TrendingUp,
   ShoppingBag,
   DollarSign,
-  Layers,
   Users,
-  Briefcase,
   Calendar,
   AlertTriangle,
   ArrowUpRight,
@@ -31,6 +29,12 @@ import {
 import { Link } from "react-router-dom";
 import { PATHS } from "@/app/router/paths";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+import LivePricesWidget from "../components/LivePricesWidget";
+import OperationsSnapshot from "../components/OperationsSnapshot";
+import RecentTransactions from "../components/RecentTransactions";
+import ShortcutOperations from "../components/ShortcutOperations";
+import BusinessRatios from "../components/BusinessRatios";
 
 export default function DashboardPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -70,7 +74,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Formatting currency
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -79,39 +82,9 @@ export default function DashboardPage() {
     }).format(val);
   };
 
-  const renderActivityMsg = (act: { type: string; msg: string }) => {
-    if (act.type === "Sale") {
-      const match = act.msg.match(/Sold (\d+) bags of (.+) for Rs\.(\d+)/i);
-      if (match) {
-        return t("activity_sold")
-          .replace("{quantity}", match[1])
-          .replace("{itemName}", match[2])
-          .replace("{amount}", Number(match[3]).toLocaleString("en-IN"));
-      }
-    } else if (act.type === "Purchase") {
-      const match = act.msg.match(/Bought (\d+) bags of (.+) for Rs\.(\d+)/i);
-      if (match) {
-        return t("activity_bought")
-          .replace("{quantity}", match[1])
-          .replace("{itemName}", match[2])
-          .replace("{amount}", Number(match[3]).toLocaleString("en-IN"));
-      }
-    } else if (act.type === "Expense") {
-      const match = act.msg.match(/Paid Rs\.(\d+) for (.+)/i);
-      if (match) {
-        return t("activity_paid")
-          .replace("{amount}", Number(match[1]).toLocaleString("en-IN"))
-          .replace("{category}", match[2]);
-      }
-    }
-    return act.msg;
-  };
-
-  // 1. MASTER ADMIN DASHBOARD VIEW
   if (isMasterAdmin) {
     return (
       <div className="space-y-6">
-        {/* Welcome and Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{t("global_admin_header")}</h1>
@@ -335,90 +308,67 @@ export default function DashboardPage() {
 
       {/* Main Charts & Side Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sales vs Expenses Chart */}
-        <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-extrabold text-slate-800">Financial Trend</h3>
-            <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 py-1 px-2.5 rounded-full">
-              Weekly Flow
-            </span>
+        {/* Left Column: Financial Trend + Business Ratios */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Sales vs Expenses Chart */}
+          <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-base font-extrabold text-slate-800">Financial Trend</h3>
+              <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 py-1 px-2.5 rounded-full">
+                Weekly Flow
+              </span>
+            </div>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.chartData}>
+                  <defs>
+                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0f172a", borderRadius: "8px", border: "none", color: "#fff" }}
+                  />
+                  <Legend verticalAlign="top" height={36} />
+                  <Area
+                    type="monotone"
+                    dataKey="Sales"
+                    name={t("sales")}
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#salesGrad)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="Expenses"
+                    name={t("expenses")}
+                    stroke="#ef4444"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#expenseGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats.chartData}>
-                <defs>
-                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#0f172a", borderRadius: "8px", border: "none", color: "#fff" }}
-                />
-                <Legend verticalAlign="top" height={36} />
-                <Area
-                  type="monotone"
-                  dataKey="Sales"
-                  name={t("sales")}
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#salesGrad)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="Expenses"
-                  name={t("expenses")}
-                  stroke="#ef4444"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#expenseGrad)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+
+          <BusinessRatios summary={summary} />
         </div>
 
         {/* Sidebar Info widgets */}
         <div className="space-y-6">
-          {/* Inventory & Labour Snapshot */}
-          <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
-            <h3 className="text-base font-extrabold text-slate-800 mb-4">{t("operations_snapshot")}</h3>
-            <div className="divide-y divide-slate-100">
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-blue-50 p-2.5 rounded-lg text-blue-600">
-                    <Layers size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-800">{t("inventory_items")}</h4>
-                    <p className="text-[10px] text-slate-400">{t("stocked_materials_byproducts")}</p>
-                  </div>
-                </div>
-                <span className="text-base font-extrabold text-slate-800">{summary.inventoryItemCount}</span>
-              </div>
+          <LivePricesWidget />
 
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-amber-50 p-2.5 rounded-lg text-amber-600">
-                    <Briefcase size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-800">{t("active_labour_force")}</h4>
-                    <p className="text-[10px] text-slate-400">{t("operators_loaders_checkers")}</p>
-                  </div>
-                </div>
-                <span className="text-base font-extrabold text-slate-800">{summary.labourCount}</span>
-              </div>
-            </div>
-          </div>
+          <OperationsSnapshot summary={summary} />
 
           {/* Quick Warning widget */}
           <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-5 flex items-start space-x-3">
@@ -437,82 +387,9 @@ export default function DashboardPage() {
 
       {/* Recent Activity Log & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Transactions List */}
-        <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-extrabold text-slate-800">{t("recent_transactions")}</h3>
-            <span className="text-xs text-slate-500 font-semibold">{t("latest_5_records")}</span>
-          </div>
+        <RecentTransactions recentActivities={stats.recentActivities} />
 
-          <div className="flow-root">
-            <ul className="-my-5 divide-y divide-slate-100">
-              {stats.recentActivities.map((act) => (
-                <li key={act.id} className="py-4">
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`p-2 rounded-full ${
-                        act.type === "Sale"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : act.type === "Purchase"
-                          ? "bg-blue-50 text-blue-600"
-                          : "bg-red-50 text-red-600"
-                      }`}
-                    >
-                      <Activity size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{renderActivityMsg(act)}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{act.date} // Type: {act.type}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Quick Module Shortcuts */}
-        <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-800 mb-2">{t("shortcut_operations")}</h3>
-            <p className="text-xs text-slate-400 mb-6">{t("shortcut_operations_desc")}</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to={PATHS.PURCHASE}
-                className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-blue-500/20 hover:bg-blue-50/10 transition text-center cursor-pointer"
-              >
-                <span className="text-lg mb-1">🛒</span>
-                <span className="text-xs font-bold text-slate-700">{t("purchases")}</span>
-              </Link>
-              <Link
-                to={PATHS.SALES}
-                className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-emerald-500/20 hover:bg-emerald-50/10 transition text-center cursor-pointer"
-              >
-                <span className="text-lg mb-1">📈</span>
-                <span className="text-xs font-bold text-slate-700">{t("sales")}</span>
-              </Link>
-              <Link
-                to={PATHS.EXPENSES}
-                className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-red-500/20 hover:bg-red-50/10 transition text-center cursor-pointer"
-              >
-                <span className="text-lg mb-1">💸</span>
-                <span className="text-xs font-bold text-slate-700">{t("expenses")}</span>
-              </Link>
-              <Link
-                to={PATHS.INVENTORY}
-                className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-100 hover:border-amber-500/20 hover:bg-amber-50/10 transition text-center cursor-pointer"
-              >
-                <span className="text-lg mb-1">📦</span>
-                <span className="text-xs font-bold text-slate-700">{t("inventory")}</span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 text-[10px] text-slate-400 border-t border-slate-100 pt-4 text-center">
-            {isPartner ? t("partner_access_view_only") : t("full_admin_controls_enabled")}
-          </div>
-        </div>
+        <ShortcutOperations isPartner={isPartner} />
       </div>
     </div>
   );
