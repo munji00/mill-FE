@@ -80,15 +80,117 @@ export default function NotificationPage() {
 
                   {/* WhatsApp Simulation status */}
                   {not.whatsappSent && (
-                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-3 flex items-start space-x-2.5 mt-2">
+                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-4 flex items-start space-x-2.5 mt-2 w-full">
                       <MessageSquare className="text-emerald-600 shrink-0 mt-0.5" size={14} />
-                      <div className="text-[11px] text-emerald-800 space-y-1 leading-relaxed">
+                      <div className="text-[11px] text-emerald-800 space-y-1.5 leading-relaxed w-full">
                         <span className="font-extrabold uppercase tracking-wide text-emerald-900 block">
                           {t("wa_dispatch_status")}:
                         </span>
-                        <p className="font-mono text-emerald-700 select-all">
-                          {not.whatsappMessageDetails}
-                        </p>
+                        {(() => {
+                          const details = not.whatsappMessageDetails || "";
+                          const marker = "Record payload: ";
+                          const markerIndex = details.indexOf(marker);
+                          if (markerIndex === -1) {
+                            return <p className="font-mono text-emerald-700 select-all">{details}</p>;
+                          }
+
+                          const prefix = details.substring(0, markerIndex).trim();
+                          const jsonStr = details.substring(markerIndex + marker.length).trim();
+                          
+                          let payloadObj: any = null;
+                          try {
+                            payloadObj = JSON.parse(jsonStr);
+                          } catch (e) {
+                            return (
+                              <div className="space-y-1">
+                                <p className="text-slate-600 font-semibold">{prefix}</p>
+                                <p className="font-mono text-emerald-700 select-all">{jsonStr}</p>
+                              </div>
+                            );
+                          }
+
+                          const technicalKeys = ["id", "tenantId", "createdAt", "updatedAt", "isActive", "status"];
+                          const displayRows = Object.entries(payloadObj).filter(
+                            ([key]) => !technicalKeys.includes(key)
+                          );
+
+                          if (displayRows.length === 0) {
+                            return <p className="text-slate-600 font-semibold">{prefix}</p>;
+                          }
+
+                          const getTranslationKey = (jsonKey: string): string => {
+                            const mapping: { [key: string]: string } = {
+                              itemName: "item_name",
+                              quantity: "quantity",
+                              unit: "unit",
+                              pricePerUnit: "price_per_unit",
+                              supplierName: "supplier_name",
+                              buyerName: "buyer_name",
+                              date: "date",
+                              category: "category",
+                              amount: "amount",
+                              description: "description",
+                              dailyWage: "wage",
+                              presentDays: "present_days",
+                              unpaidDues: "unpaid_dues",
+                              contactNumber: "contact",
+                              minStockAlert: "min_stock_alert",
+                              stockQuantity: "stock_quantity",
+                              name: "item_name",
+                              role: "designation",
+                              email: "email_address",
+                              state: "state",
+                              city: "city",
+                              townOrVillage: "town_village",
+                            };
+                            return mapping[jsonKey] || jsonKey;
+                          };
+
+                          const humanizeKey = (key: string) => {
+                            const result = key.replace(/([A-Z])/g, " $1");
+                            return result.charAt(0).toUpperCase() + result.slice(1);
+                          };
+
+                          const translateKey = (jsonKey: string) => {
+                            const key = getTranslationKey(jsonKey);
+                            const translated = t(key);
+                            return translated === key ? humanizeKey(jsonKey) : translated;
+                          };
+
+                          return (
+                            <div className="space-y-3 w-full">
+                              <p className="text-slate-700 font-semibold text-xs">{prefix}</p>
+                              <div className="border border-emerald-100 rounded-lg bg-white max-w-2xl shadow-sm overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-emerald-600 text-white font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">
+                                      {displayRows.map(([key]) => (
+                                        <th key={key} className="px-3 py-1.5 border-b border-emerald-200">
+                                          {translateKey(key)}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr className="hover:bg-slate-50 transition-colors">
+                                      {displayRows.map(([key, val]: any) => (
+                                        <td key={key} className="px-3 py-1.5 text-slate-800 font-mono select-all whitespace-nowrap">
+                                          {typeof val === "number" &&
+                                          (key.toLowerCase().includes("price") ||
+                                            key.toLowerCase().includes("wage") ||
+                                            key.toLowerCase().includes("amount") ||
+                                            key.toLowerCase().includes("due"))
+                                            ? `Rs. ${val.toLocaleString("en-IN")}`
+                                            : String(val)}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
