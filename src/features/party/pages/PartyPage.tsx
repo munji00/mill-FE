@@ -9,6 +9,7 @@ import {
 } from "../api/partyApi";
 import { ShieldAlert, Plus, Edit2, Trash2, X, Factory, Mail, Phone, MapPin, User as UserIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 
 export default function PartyPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -19,7 +20,9 @@ export default function PartyPage() {
 
   const [createParty, { isLoading: isCreating }] = useCreatePartyMutation();
   const [updateParty, { isLoading: isUpdating }] = useUpdatePartyMutation();
-  const [deleteParty] = useDeletePartyMutation();
+  const [deleteParty, { isLoading: isDeleting }] = useDeletePartyMutation();
+
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editingParty, setEditingParty] = useState<any>(null);
@@ -130,13 +133,18 @@ export default function PartyPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this Mill Party? This action is irreversible.")) {
-      try {
-        await deleteParty(id).unwrap();
-      } catch (err) {
-        console.error("Failed to delete party:", err);
-      }
+  const handleDelete = (id: string) => {
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteParty(deleteTargetId).unwrap();
+    } catch (err) {
+      console.error("Failed to delete party:", err);
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -481,6 +489,17 @@ export default function PartyPage() {
           </div>
         </div>
       )}
+      {/* Custom Delete Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title={t("confirm_delete_title")}
+        message={t("confirm_delete_msg")}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
+        isConfirming={isDeleting}
+      />
     </div>
   );
 }

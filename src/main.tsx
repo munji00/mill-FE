@@ -7,6 +7,7 @@ import "./index.css";
 
 import { ReduxProvider } from "./app/providers/ReduxProvider";
 import { AuthInitializer } from "./features/auth/components/AuthInitializer";
+import { NotificationInitializer } from "./features/notifications/components/NotificationInitializer";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ReduxProvider>
       <LanguageProvider>
         <AuthInitializer>
-          <App />
+          <NotificationInitializer>
+            <App />
+          </NotificationInitializer>
         </AuthInitializer>
       </LanguageProvider>
     </ReduxProvider>

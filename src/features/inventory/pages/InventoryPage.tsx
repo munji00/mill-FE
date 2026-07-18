@@ -10,6 +10,7 @@ import {
 import { Plus, Edit2, Trash2, X, Search, Layers, ShieldAlert, AlertCircle, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 
 export default function InventoryPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -17,7 +18,9 @@ export default function InventoryPage() {
   const { t, language } = useLanguage();
   const [createInventory, { isLoading: isCreating }] = useCreateInventoryMutation();
   const [updateInventory, { isLoading: isUpdating }] = useUpdateInventoryMutation();
-  const [deleteInventory] = useDeleteInventoryMutation();
+  const [deleteInventory, { isLoading: isDeleting }] = useDeleteInventoryMutation();
+
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -96,14 +99,19 @@ export default function InventoryPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (isPartner) return;
-    if (confirm("Are you sure you want to delete this inventory item?")) {
-      try {
-        await deleteInventory(id).unwrap();
-      } catch (err) {
-        console.error("Failed to delete inventory item:", err);
-      }
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteInventory(deleteTargetId).unwrap();
+    } catch (err) {
+      console.error("Failed to delete inventory item:", err);
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -344,6 +352,17 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+      {/* Custom Delete Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title={t("confirm_delete_title")}
+        message={t("confirm_delete_msg")}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
+        isConfirming={isDeleting}
+      />
     </div>
   );
 }

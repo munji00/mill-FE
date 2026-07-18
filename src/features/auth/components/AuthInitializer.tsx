@@ -12,13 +12,11 @@ export const AuthInitializer = ({
   children: React.ReactNode;
 }) => {
   const dispatch = useAppDispatch();
-
   const [getMe] = useLazyMeQuery();
 
   useEffect(() => {
     const init = async () => {
       const token = tokenManager.get();
-
       if (!token) return;
 
       try {

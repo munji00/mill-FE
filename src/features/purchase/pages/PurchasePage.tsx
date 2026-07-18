@@ -10,6 +10,7 @@ import {
 import { Plus, Edit2, Trash2, X, Search, Calendar, Landmark, ShoppingBag, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 
 export default function PurchasePage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -17,7 +18,9 @@ export default function PurchasePage() {
   const { t, language } = useLanguage();
   const [createPurchase, { isLoading: isCreating }] = useCreatePurchaseMutation();
   const [updatePurchase, { isLoading: isUpdating }] = useUpdatePurchaseMutation();
-  const [deletePurchase] = useDeletePurchaseMutation();
+  const [deletePurchase, { isLoading: isDeleting }] = useDeletePurchaseMutation();
+
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -101,14 +104,19 @@ export default function PurchasePage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (isPartner) return;
-    if (confirm("Are you sure you want to delete this purchase transaction?")) {
-      try {
-        await deletePurchase(id).unwrap();
-      } catch (err) {
-        console.error("Failed to delete purchase:", err);
-      }
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deletePurchase(deleteTargetId).unwrap();
+    } catch (err) {
+      console.error("Failed to delete purchase:", err);
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -360,6 +368,17 @@ export default function PurchasePage() {
           </div>
         </div>
       )}
+      {/* Custom Delete Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title={t("confirm_delete_title")}
+        message={t("confirm_delete_msg")}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
+        isConfirming={isDeleting}
+      />
     </div>
   );
 }

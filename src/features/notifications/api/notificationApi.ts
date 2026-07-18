@@ -18,8 +18,15 @@ export const notificationApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Notification"],
     }),
+    subscribeToPush: builder.mutation<ApiResponse<any>, any>({
+      query: (subscription) => ({
+        url: "/notifications/push-subscribe",
+        method: "POST",
+        data: subscription,
+      }),
+    }),
   }),
 });
 
-export const { useGetNotificationsQuery, useMarkAsReadMutation } = notificationApi;
+export const { useGetNotificationsQuery, useMarkAsReadMutation, useSubscribeToPushMutation } = notificationApi;
 export default notificationApi;

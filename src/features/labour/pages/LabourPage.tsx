@@ -10,6 +10,7 @@ import {
 import { Plus, Edit2, Trash2, X, Search, UserCheck, Briefcase, Phone, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 
 export default function LabourPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -17,7 +18,9 @@ export default function LabourPage() {
   const { t, language } = useLanguage();
   const [createLabour, { isLoading: isCreating }] = useCreateLabourMutation();
   const [updateLabour, { isLoading: isUpdating }] = useUpdateLabourMutation();
-  const [deleteLabour] = useDeleteLabourMutation();
+  const [deleteLabour, { isLoading: isDeleting }] = useDeleteLabourMutation();
+
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -100,14 +103,19 @@ export default function LabourPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (isPartner) return;
-    if (confirm("Are you sure you want to delete this labour profile?")) {
-      try {
-        await deleteLabour(id).unwrap();
-      } catch (err) {
-        console.error("Failed to delete labour:", err);
-      }
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteLabour(deleteTargetId).unwrap();
+    } catch (err) {
+      console.error("Failed to delete labour:", err);
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -373,6 +381,17 @@ export default function LabourPage() {
           </div>
         </div>
       )}
+      {/* Custom Delete Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title={t("confirm_delete_title")}
+        message={t("confirm_delete_msg")}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
+        isConfirming={isDeleting}
+      />
     </div>
   );
 }
