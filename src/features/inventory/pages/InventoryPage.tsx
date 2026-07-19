@@ -7,10 +7,13 @@ import {
   useUpdateInventoryMutation,
   useDeleteInventoryMutation,
 } from "../api/inventoryApi";
-import { Plus, Edit2, Trash2, X, Search, Layers, ShieldAlert, AlertCircle, Download } from "lucide-react";
+import { Plus, Layers, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { InventoryFilters } from "../components/InventoryFilters";
+import { InventoryTable } from "../components/InventoryTable";
+import { InventoryFormModal } from "../components/InventoryFormModal";
 
 export default function InventoryPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -21,20 +24,22 @@ export default function InventoryPage() {
   const [deleteInventory, { isLoading: isDeleting }] = useDeleteInventoryMutation();
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
-  const handleDownloadPDF = () => {
-    downloadPDF("inventory-table-container", `${user?.tenant?.name || "Mill"}_Inventory_Report`, {
-      title: t("inventory"),
-      subtitle: t("inventory_desc"),
-      tenantName: user?.tenant?.name,
-      tenantCode: user?.tenant?.code,
-      language: language,
-    });
-  };
+  // Active filter states
+  const [searchItemName, setSearchItemName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [minStockQuantity, setMinStockQuantity] = useState("");
+  const [maxStockQuantity, setMaxStockQuantity] = useState("");
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+
+  // Draft filter states
+  const [draftSearchItemName, setDraftSearchItemName] = useState("");
+  const [draftSelectedCategory, setDraftSelectedCategory] = useState("");
+  const [draftMinStockQuantity, setDraftMinStockQuantity] = useState("");
+  const [draftMaxStockQuantity, setDraftMaxStockQuantity] = useState("");
+  const [draftShowLowStockOnly, setDraftShowLowStockOnly] = useState(false);
 
   // Form Fields
   const [itemName, setItemName] = useState("");
@@ -47,11 +52,40 @@ export default function InventoryPage() {
   const isPartner = user.role === USER_ROLE.PARTNER;
 
   const records = response?.data || [];
-  const filteredRecords = records.filter(
-    (r) =>
-      r.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  // Compute unique items for datalist suggestion
+  const uniqueItems = Array.from(new Set(records.map((r: any) => r.itemName))).filter(Boolean);
+
+  const filteredRecords = records.filter((r: any) => {
+    // 1. Item Name Filter
+    if (searchItemName && !r.itemName.toLowerCase().includes(searchItemName.toLowerCase())) return false;
+
+    // 2. Category Filter
+    if (selectedCategory && r.category !== selectedCategory) return false;
+
+    // 3. Stock Level Filter
+    const stock = r.stockQuantity || 0;
+    if (minStockQuantity && stock < parseFloat(minStockQuantity)) return false;
+    if (maxStockQuantity && stock > parseFloat(maxStockQuantity)) return false;
+
+    // 4. Low Stock Alert
+    if (showLowStockOnly) {
+      const isLow = r.stockQuantity <= r.minStockAlert;
+      if (!isLow) return false;
+    }
+
+    return true;
+  });
+
+  const handleDownloadPDF = () => {
+    downloadPDF("inventory-table-container", `${user?.tenant?.name || "Mill"}_Inventory_Report`, {
+      title: t("inventory"),
+      subtitle: t("inventory_desc"),
+      tenantName: user?.tenant?.name,
+      tenantCode: user?.tenant?.code,
+      language: language,
+    });
+  };
 
   const handleOpenAdd = () => {
     if (isPartner) return;
@@ -133,38 +167,64 @@ export default function InventoryPage() {
             {t("inventory_desc")}
           </p>
         </div>
-        <div className="flex space-x-3 items-center">
+        <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:space-x-3 sm:w-auto items-center">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Download size={18} />
-            <span>{t("download_report")}</span>
+            <Download size={16} className="shrink-0" />
+            <span className="truncate">{t("download_report")}</span>
           </button>
           <button
             onClick={handleOpenAdd}
             disabled={isPartner}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus size={18} />
-            <span>{t("add_inventory")}</span>
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate">{t("add_inventory")}</span>
           </button>
         </div>
       </div>
 
       {/* Table Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t("search_placeholder")}
-            className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-      </div>
+      <InventoryFilters
+        draftSearchItemName={draftSearchItemName}
+        setDraftSearchItemName={setDraftSearchItemName}
+        draftSelectedCategory={draftSelectedCategory}
+        setDraftSelectedCategory={setDraftSelectedCategory}
+        draftMinStockQuantity={draftMinStockQuantity}
+        setDraftMinStockQuantity={setDraftMinStockQuantity}
+        draftMaxStockQuantity={draftMaxStockQuantity}
+        setDraftMaxStockQuantity={setDraftMaxStockQuantity}
+        draftShowLowStockOnly={draftShowLowStockOnly}
+        setDraftShowLowStockOnly={setDraftShowLowStockOnly}
+        searchItemName={searchItemName}
+        selectedCategory={selectedCategory}
+        minStockQuantity={minStockQuantity}
+        maxStockQuantity={maxStockQuantity}
+        showLowStockOnly={showLowStockOnly}
+        uniqueItems={uniqueItems}
+        onApplyFilters={() => {
+          setSearchItemName(draftSearchItemName);
+          setSelectedCategory(draftSelectedCategory);
+          setMinStockQuantity(draftMinStockQuantity);
+          setMaxStockQuantity(draftMaxStockQuantity);
+          setShowLowStockOnly(draftShowLowStockOnly);
+        }}
+        onClearFilters={() => {
+          setSearchItemName("");
+          setSelectedCategory("");
+          setMinStockQuantity("");
+          setMaxStockQuantity("");
+          setShowLowStockOnly(false);
+
+          setDraftSearchItemName("");
+          setDraftSelectedCategory("");
+          setDraftMinStockQuantity("");
+          setDraftMaxStockQuantity("");
+          setDraftShowLowStockOnly(false);
+        }}
+      />
 
       {/* Interactive Table List */}
       {isLoading ? (
@@ -180,178 +240,33 @@ export default function InventoryPage() {
           <p className="text-sm text-slate-400 mt-1">No items found matching your filter criteria.</p>
         </div>
       ) : (
-        <div id="inventory-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{t("item_name")}</th>
-                  <th className="px-6 py-4">{t("category")}</th>
-                  <th className="px-6 py-4">{t("stock_quantity")}</th>
-                  <th className="px-6 py-4">{t("min_stock_alert")}</th>
-                  <th className="px-6 py-4">Status Alert</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredRecords.map((rec) => {
-                  const isLowStock = rec.stockQuantity <= rec.minStockAlert;
-                  return (
-                    <tr key={rec.id} className="hover:bg-slate-50/60 transition">
-                      <td className="px-6 py-4 font-bold text-slate-900">{rec.itemName}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
-                          {rec.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-mono font-bold text-slate-800">
-                        {rec.stockQuantity} <span className="text-xs text-slate-400 font-sans">{rec.unit}</span>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-slate-600">
-                        {rec.minStockAlert} <span className="text-xs text-slate-400 font-sans">{rec.unit}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {isLowStock ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-50 text-red-700 border border-red-100 animate-pulse">
-                            <AlertCircle size={10} className="mr-1" />
-                            Low Stock Alert
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            Normal
-                          </span>
-                        )}
-                      </td>
-                      {!isPartner && (
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end space-x-2">
-                            <button
-                              onClick={() => handleOpenEdit(rec)}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                              title="Edit Item"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(rec.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                              title="Delete Item"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <InventoryTable
+          filteredRecords={filteredRecords}
+          isPartner={isPartner}
+          onEdit={handleOpenEdit}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* CRUD Form Dialog Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
-              <h3 className="font-extrabold text-sm">
-                {editingRecord ? "Edit Stock Item" : "Register Stock Item"}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
-                <X size={20} />
-              </button>
-            </div>
+      <InventoryFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        editingRecord={editingRecord}
+        onSave={handleSave}
+        itemName={itemName}
+        setItemName={setItemName}
+        category={category}
+        setCategory={setCategory}
+        stockQuantity={stockQuantity}
+        setStockQuantity={setStockQuantity}
+        unit={unit}
+        setUnit={setUnit}
+        minStockAlert={minStockAlert}
+        setMinStockAlert={setMinStockAlert}
+        isSaving={isCreating || isUpdating}
+      />
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("item_name")}</label>
-                <input
-                  type="text"
-                  required
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  placeholder="e.g. Haryana Paddy 1121 Raw"
-                  className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("category")}</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as any)}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="Raw Material">Raw Material</option>
-                    <option value="Finished Goods">Finished Goods</option>
-                    <option value="Packaging">Packaging</option>
-                    <option value="Byproduct">Byproduct</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unit")}</label>
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="Bags">Bags</option>
-                    <option value="Tons">Tons</option>
-                    <option value="Quintals">Quintals</option>
-                    <option value="Pieces">Pieces</option>
-                    <option value="Barrels">Barrels</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("stock_quantity")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={stockQuantity}
-                    onChange={(e) => setStockQuantity(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("min_stock_alert")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={minStockAlert}
-                    onChange={(e) => setMinStockAlert(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
-                >
-                  {isCreating || isUpdating ? "Saving..." : editingRecord ? t("save_changes") : t("save_changes")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       {/* Custom Delete Confirmation Dialog */}
       <ConfirmModal
         isOpen={deleteTargetId !== null}

@@ -19,8 +19,10 @@ import {
   ShieldCheck,
   Settings,
   ChevronUp,
+  Menu,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { closeSidebar, toggleSidebar } from "@/app/store/slices/uiSlice";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -42,6 +44,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
   
   const [whatsappAlerts, setWhatsappAlerts] = useState<WhatsAppAlert[]>([]);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
+
+  // Close sidebar on path change (useful for mobile)
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      dispatch(closeSidebar());
+    }
+  }, [location.pathname, dispatch]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -107,8 +117,20 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans" dir="ltr">
-      {/* Sidebar - Permanently visible, light-themed */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
+      {/* Mobile Backdrop Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+          onClick={() => dispatch(closeSidebar())}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center space-x-2">
@@ -124,6 +146,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </p>
             </div>
           </div>
+          {/* Close Sidebar Button (Mobile Only) */}
+          <button
+            onClick={() => dispatch(closeSidebar())}
+            className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Navigation Links */}
@@ -204,48 +233,72 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shadow-sm z-10">
           <div className="flex items-center space-x-3">
-            <div className="block">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center space-x-2">
+            {/* Mobile Menu Toggle Button */}
+            <button
+              onClick={() => dispatch(toggleSidebar())}
+              className="p-1.5 -ml-1 rounded-lg text-slate-500 hover:bg-slate-100 transition cursor-pointer md:hidden"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="block max-w-[120px] xs:max-w-[180px] sm:max-w-xs md:max-w-none">
+              <h2 className="text-sm sm:text-lg md:text-xl font-bold text-slate-800 flex items-center space-x-2 truncate">
                 {isMasterAdmin ? (
                   <>
-                    <ShieldCheck className="text-blue-600" size={22} />
-                    <span>{t("global_admin_header")}</span>
+                    <ShieldCheck className="text-blue-600 shrink-0" size={18} />
+                    <span className="truncate">{t("global_admin_header")}</span>
                   </>
                 ) : (
-                  <span>{(user.tenant?.name || "Single Party") + " " + t("dashboard")}</span>
+                  <span className="truncate">{(user.tenant?.name || "Single Party") + " " + t("dashboard")}</span>
                 )}
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Language Selector Selector */}
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as any)}
-              className="text-xs font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer text-slate-700"
+              className="text-[10px] sm:text-xs font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg px-1.5 py-1 sm:px-2.5 sm:py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer text-slate-700"
             >
-              <option value="en">English</option>
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="ur">اردو (Urdu)</option>
+              <option value="en">EN</option>
+              <option value="hi">HI</option>
+              <option value="ur">UR</option>
             </select>
 
             {/* Quick badges */}
             {!isMasterAdmin && (
-              <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  isPartner
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-emerald-100 text-emerald-800"
-                }`}
-              >
-                {isPartner ? "🔒 Partner (Read-only)" : "⚡ Admin Access"}
-              </span>
+              <>
+                <span
+                  className={`text-xs font-semibold px-3 py-1 rounded-full hidden md:inline-block ${
+                    isPartner
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
+                  {isPartner ? "🔒 Partner (Read-only)" : "⚡ Admin Access"}
+                </span>
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full md:hidden ${
+                    isPartner
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                  title={isPartner ? "Partner (Read-only)" : "Admin Access"}
+                >
+                  {isPartner ? "🔒" : "⚡"}
+                </span>
+              </>
             )}
             {isMasterAdmin && (
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-800">
-                👑 Super User
-              </span>
+              <>
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-800 hidden md:inline-block">
+                  👑 Super User
+                </span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-800 md:hidden" title="Super User">
+                  👑
+                </span>
+              </>
             )}
 
             {/* Notification Drawer Shortcut */}
@@ -262,7 +315,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-slate-50 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50 relative">
           {children}
         </main>
       </div>

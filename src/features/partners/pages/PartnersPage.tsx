@@ -80,9 +80,9 @@ export default function PartnersPage() {
         <button
           onClick={handleOpenAdd}
           disabled={isPartner}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+          className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed w-full sm:w-auto text-xs sm:text-sm"
         >
-          <Plus size={18} />
+          <Plus size={16} className="shrink-0" />
           <span>{t("register_new_partner")}</span>
         </button>
       </div>

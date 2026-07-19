@@ -7,10 +7,13 @@ import {
   useUpdatePurchaseMutation,
   useDeletePurchaseMutation,
 } from "../api/purchaseApi";
-import { Plus, Edit2, Trash2, X, Search, Calendar, Landmark, ShoppingBag, ShieldAlert, Download } from "lucide-react";
+import { Plus, ShoppingBag, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { PurchaseFilters } from "../components/PurchaseFilters";
+import { PurchaseTable } from "../components/PurchaseTable";
+import { PurchaseFormModal } from "../components/PurchaseFormModal";
 
 export default function PurchasePage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -22,9 +25,26 @@ export default function PurchasePage() {
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
+
+  // Search & Filter Active States (applied on search click)
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedItemName, setSelectedItemName] = useState("");
+  const [selectedSupplierName, setSelectedSupplierName] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
+
+  // Search & Filter Draft States (bound to user inputs)
+  const [draftStartDate, setDraftStartDate] = useState("");
+  const [draftEndDate, setDraftEndDate] = useState("");
+  const [draftSelectedItemName, setDraftSelectedItemName] = useState("");
+  const [draftSelectedSupplierName, setDraftSelectedSupplierName] = useState("");
+  const [draftMinAmount, setDraftMinAmount] = useState("");
+  const [draftMaxAmount, setDraftMaxAmount] = useState("");
+  const [draftSelectedPaymentStatus, setDraftSelectedPaymentStatus] = useState("");
 
   const handleDownloadPDF = () => {
     downloadPDF("purchases-table-container", `${user?.tenant?.name || "Mill"}_Purchases_Report`, {
@@ -43,16 +63,39 @@ export default function PurchasePage() {
   const [pricePerUnit, setPricePerUnit] = useState<number>(0);
   const [supplierName, setSupplierName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [paymentStatus, setPaymentStatus] = useState("Paid");
 
   if (!user) return null;
   const isPartner = user.role === USER_ROLE.PARTNER;
 
   const records = response?.data || [];
-  const filteredRecords = records.filter(
-    (r) =>
-      r.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.supplierName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  // Compute unique items and suppliers for selects
+  const uniqueItems = Array.from(new Set(records.map((r: any) => r.itemName))).filter(Boolean);
+  const uniqueSuppliers = Array.from(new Set(records.map((r: any) => r.supplierName))).filter(Boolean);
+
+  const filteredRecords = records.filter((r: any) => {
+    // 1. Date Range Filter
+    if (startDate && r.date < startDate) return false;
+    if (endDate && r.date > endDate) return false;
+
+    // 2. Item Name Filter
+    if (selectedItemName && r.itemName !== selectedItemName) return false;
+
+    // 3. Supplier Name Filter
+    if (selectedSupplierName && r.supplierName !== selectedSupplierName) return false;
+
+    // 4. Amount Filter
+    const amount = r.totalAmount || 0;
+    if (minAmount && amount < parseFloat(minAmount)) return false;
+    if (maxAmount && amount > parseFloat(maxAmount)) return false;
+
+    // 5. Payment Status Filter
+    const status = r.paymentStatus || "Paid";
+    if (selectedPaymentStatus && status !== selectedPaymentStatus) return false;
+
+    return true;
+  });
 
   const handleOpenAdd = () => {
     if (isPartner) return;
@@ -63,6 +106,7 @@ export default function PurchasePage() {
     setPricePerUnit(2200);
     setSupplierName("");
     setDate(new Date().toISOString().split("T")[0]);
+    setPaymentStatus("Paid");
     setShowModal(true);
   };
 
@@ -75,6 +119,7 @@ export default function PurchasePage() {
     setPricePerUnit(rec.pricePerUnit);
     setSupplierName(rec.supplierName);
     setDate(rec.date);
+    setPaymentStatus(rec.paymentStatus || "Paid");
     setShowModal(true);
   };
 
@@ -90,6 +135,7 @@ export default function PurchasePage() {
       totalAmount: quantity * pricePerUnit,
       supplierName,
       date,
+      paymentStatus,
     };
 
     try {
@@ -138,38 +184,77 @@ export default function PurchasePage() {
             {t("purchases_desc")}
           </p>
         </div>
-        <div className="flex space-x-3 items-center">
+        <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:space-x-3 sm:w-auto items-center">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Download size={18} />
-            <span>{t("download_report")}</span>
+            <Download size={16} className="shrink-0" />
+            <span className="truncate">{t("download_report")}</span>
           </button>
           <button
             onClick={handleOpenAdd}
             disabled={isPartner}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus size={18} />
-            <span>{t("add_purchase")}</span>
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate">{t("add_purchase")}</span>
           </button>
         </div>
       </div>
 
-      {/* Table Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t("search_placeholder")}
-            className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-      </div>
+      {/* Table Filters Grid */}
+      <PurchaseFilters
+        draftStartDate={draftStartDate}
+        setDraftStartDate={setDraftStartDate}
+        draftEndDate={draftEndDate}
+        setDraftEndDate={setDraftEndDate}
+        draftSelectedItemName={draftSelectedItemName}
+        setDraftSelectedItemName={setDraftSelectedItemName}
+        draftSelectedSupplierName={draftSelectedSupplierName}
+        setDraftSelectedSupplierName={setDraftSelectedSupplierName}
+        draftMinAmount={draftMinAmount}
+        setDraftMinAmount={setDraftMinAmount}
+        draftMaxAmount={draftMaxAmount}
+        setDraftMaxAmount={setDraftMaxAmount}
+        draftSelectedPaymentStatus={draftSelectedPaymentStatus}
+        setDraftSelectedPaymentStatus={setDraftSelectedPaymentStatus}
+        startDate={startDate}
+        endDate={endDate}
+        selectedItemName={selectedItemName}
+        selectedSupplierName={selectedSupplierName}
+        minAmount={minAmount}
+        maxAmount={maxAmount}
+        selectedPaymentStatus={selectedPaymentStatus}
+        uniqueItems={uniqueItems}
+        uniqueSuppliers={uniqueSuppliers}
+        onApplyFilters={() => {
+          setStartDate(draftStartDate);
+          setEndDate(draftEndDate);
+          setSelectedItemName(draftSelectedItemName);
+          setSelectedSupplierName(draftSelectedSupplierName);
+          setMinAmount(draftMinAmount);
+          setMaxAmount(draftMaxAmount);
+          setSelectedPaymentStatus(draftSelectedPaymentStatus);
+        }}
+        onClearFilters={() => {
+          setStartDate("");
+          setEndDate("");
+          setSelectedItemName("");
+          setSelectedSupplierName("");
+          setMinAmount("");
+          setMaxAmount("");
+          setSelectedPaymentStatus("");
+
+          setDraftStartDate("");
+          setDraftEndDate("");
+          setDraftSelectedItemName("");
+          setDraftSelectedSupplierName("");
+          setDraftMinAmount("");
+          setDraftMaxAmount("");
+          setDraftSelectedPaymentStatus("");
+        }}
+      />
 
       {/* Interactive Table List */}
       {isLoading ? (
@@ -185,189 +270,36 @@ export default function PurchasePage() {
           <p className="text-sm text-slate-400 mt-1">No transaction items found matching your filters.</p>
         </div>
       ) : (
-        <div id="purchases-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{t("date")}</th>
-                  <th className="px-6 py-4">{t("item_name")}</th>
-                  <th className="px-6 py-4">{t("supplier_name")}</th>
-                  <th className="px-6 py-4">{t("quantity")} / {t("unit")}</th>
-                  <th className="px-6 py-4">{t("price_per_unit")}</th>
-                  <th className="px-6 py-4">{t("amount")}</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-50/60 transition">
-                    <td className="px-6 py-4 font-semibold text-slate-600 flex items-center space-x-2">
-                      <Calendar size={14} className="text-slate-400" />
-                      <span>{rec.date}</span>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-slate-900">{rec.itemName}</td>
-                    <td className="px-6 py-4 text-slate-600 flex items-center space-x-2">
-                      <Landmark size={14} className="text-slate-400" />
-                      <span>{rec.supplierName}</span>
-                    </td>
-                    <td className="px-6 py-4 font-mono font-semibold text-slate-700">
-                      {rec.quantity} <span className="text-xs text-slate-400 font-sans">{rec.unit}</span>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-600">
-                      Rs. {rec.pricePerUnit}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-slate-900">
-                      Rs. {rec.totalAmount.toLocaleString("en-IN")}
-                    </td>
-                    {!isPartner && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleOpenEdit(rec)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                            title="Edit Record"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rec.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete Record"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <PurchaseTable
+          filteredRecords={filteredRecords}
+          isPartner={isPartner}
+          onEdit={handleOpenEdit}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* CRUD Form Dialog Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
-              <h3 className="font-extrabold text-sm">
-                {editingRecord ? "Update Purchase Log" : "Log New Intake Transaction"}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("item_name")}</label>
-                <select
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="Paddy Raw Basmati (1121)">Paddy Raw Basmati (1121)</option>
-                  <option value="Sona Masuri Paddy">Sona Masuri Paddy</option>
-                  <option value="White Rice Husk Bags">White Rice Husk Bags</option>
-                  <option value="Premium Paddy Seeds">Premium Paddy Seeds</option>
-                  <option value="Diesel Generator Fuel">Diesel Generator Fuel</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("quantity")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unit")}</label>
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="Bags">Bags</option>
-                    <option value="Tons">Tons</option>
-                    <option value="Quintals">Quintals</option>
-                    <option value="Pieces">Pieces</option>
-                    <option value="Liters">Liters</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("price_per_unit")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    value={pricePerUnit}
-                    onChange={(e) => setPricePerUnit(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("date")}</label>
-                  <input
-                    type="date"
-                    required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("supplier_name")}</label>
-                <input
-                  type="text"
-                  required
-                  value={supplierName}
-                  onChange={(e) => setSupplierName(e.target.value)}
-                  placeholder="e.g. Punjab Agro Cooperative"
-                  className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-lg border flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500 uppercase">Estimated Total Cost:</span>
-                <span className="font-mono font-extrabold text-sm text-slate-900">
-                  Rs. {(quantity * pricePerUnit).toLocaleString("en-IN")}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
-                >
-                  {isCreating || isUpdating ? "Logging..." : editingRecord ? t("save_changes") : t("save_changes")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PurchaseFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        editingRecord={editingRecord}
+        onSave={handleSave}
+        itemName={itemName}
+        setItemName={setItemName}
+        quantity={quantity}
+        setQuantity={setQuantity}
+        unit={unit}
+        setUnit={setUnit}
+        pricePerUnit={pricePerUnit}
+        setPricePerUnit={setPricePerUnit}
+        supplierName={supplierName}
+        setSupplierName={setSupplierName}
+        date={date}
+        setDate={setDate}
+        paymentStatus={paymentStatus}
+        setPaymentStatus={setPaymentStatus}
+        isSaving={isCreating || isUpdating}
+      />
       {/* Custom Delete Confirmation Dialog */}
       <ConfirmModal
         isOpen={deleteTargetId !== null}

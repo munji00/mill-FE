@@ -23,6 +23,7 @@ export interface MockPurchase {
   totalAmount: number;
   supplierName: string;
   date: string;
+  paymentStatus?: string;
   tenantId: string;
 }
 
@@ -141,6 +142,7 @@ const DEFAULT_PURCHASES: MockPurchase[] = [
     totalAmount: 1100000,
     supplierName: "Kisan Mandi Agency",
     date: "2026-07-01",
+    paymentStatus: "Paid",
     tenantId: "tenant-a",
   },
   {
@@ -152,6 +154,7 @@ const DEFAULT_PURCHASES: MockPurchase[] = [
     totalAmount: 630000,
     supplierName: "Punjab Agro Farms",
     date: "2026-07-06",
+    paymentStatus: "Pending",
     tenantId: "tenant-a",
   },
   {
@@ -163,6 +166,7 @@ const DEFAULT_PURCHASES: MockPurchase[] = [
     totalAmount: 15000,
     supplierName: "Unique Packaging Ltd",
     date: "2026-07-10",
+    paymentStatus: "Partial",
     tenantId: "tenant-a",
   },
   {
@@ -174,6 +178,7 @@ const DEFAULT_PURCHASES: MockPurchase[] = [
     totalAmount: 500000,
     supplierName: "National Seeds Corp",
     date: "2026-07-05",
+    paymentStatus: "Paid",
     tenantId: "tenant-b",
   },
 ];

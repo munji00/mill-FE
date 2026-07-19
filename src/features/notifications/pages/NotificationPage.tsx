@@ -157,36 +157,24 @@ export default function NotificationPage() {
                             return translated === key ? humanizeKey(jsonKey) : translated;
                           };
 
-                          return (
+                           return (
                             <div className="space-y-3 w-full">
                               <p className="text-slate-700 font-semibold text-xs">{prefix}</p>
-                              <div className="border border-emerald-100 rounded-lg bg-white max-w-2xl shadow-sm overflow-x-auto">
-                                <table className="w-full text-left text-xs border-collapse">
-                                  <thead>
-                                    <tr className="bg-emerald-600 text-white font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">
-                                      {displayRows.map(([key]) => (
-                                        <th key={key} className="px-3 py-1.5 border-b border-emerald-200">
-                                          {translateKey(key)}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr className="hover:bg-slate-50 transition-colors">
-                                      {displayRows.map(([key, val]: any) => (
-                                        <td key={key} className="px-3 py-1.5 text-slate-800 font-mono select-all whitespace-nowrap">
-                                          {typeof val === "number" &&
-                                          (key.toLowerCase().includes("price") ||
-                                            key.toLowerCase().includes("wage") ||
-                                            key.toLowerCase().includes("amount") ||
-                                            key.toLowerCase().includes("due"))
-                                            ? `Rs. ${val.toLocaleString("en-IN")}`
-                                            : String(val)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  </tbody>
-                                </table>
+                              <div className="border border-emerald-100 rounded-xl bg-white max-w-md shadow-sm divide-y divide-slate-100 overflow-hidden">
+                                {displayRows.map(([key, val]: any) => (
+                                  <div key={key} className="flex justify-between items-center px-4 py-2.5 text-[11px] sm:text-xs">
+                                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{translateKey(key)}</span>
+                                    <span className="font-mono text-slate-800 select-all font-bold">
+                                      {typeof val === "number" &&
+                                      (key.toLowerCase().includes("price") ||
+                                        key.toLowerCase().includes("wage") ||
+                                        key.toLowerCase().includes("amount") ||
+                                        key.toLowerCase().includes("due"))
+                                        ? `Rs. ${val.toLocaleString("en-IN")}`
+                                        : String(val)}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           );

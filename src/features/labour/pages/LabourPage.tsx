@@ -7,10 +7,13 @@ import {
   useUpdateLabourMutation,
   useDeleteLabourMutation,
 } from "../api/labourApi";
-import { Plus, Edit2, Trash2, X, Search, UserCheck, Briefcase, Phone, ShieldAlert, Download } from "lucide-react";
+import { Plus, UserCheck, ShieldAlert, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { downloadPDF } from "@/utils/pdfHelper";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { LabourFilters } from "../components/LabourFilters";
+import { LabourTable } from "../components/LabourTable";
+import { LabourFormModal } from "../components/LabourFormModal";
 
 export default function LabourPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -21,20 +24,22 @@ export default function LabourPage() {
   const [deleteLabour, { isLoading: isDeleting }] = useDeleteLabourMutation();
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
-  const handleDownloadPDF = () => {
-    downloadPDF("labour-table-container", `${user?.tenant?.name || "Mill"}_Labour_Report`, {
-      title: t("labour_manage"),
-      subtitle: t("labour_desc"),
-      tenantName: user?.tenant?.name,
-      tenantCode: user?.tenant?.code,
-      language: language,
-    });
-  };
+  // Active filter states
+  const [searchName, setSearchName] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [minDailyWage, setMinDailyWage] = useState("");
+  const [maxDailyWage, setMaxDailyWage] = useState("");
+  const [searchContact, setSearchContact] = useState("");
+
+  // Draft filter states
+  const [draftSearchName, setDraftSearchName] = useState("");
+  const [draftSelectedRole, setDraftSelectedRole] = useState("");
+  const [draftMinDailyWage, setDraftMinDailyWage] = useState("");
+  const [draftMaxDailyWage, setDraftMaxDailyWage] = useState("");
+  const [draftSearchContact, setDraftSearchContact] = useState("");
 
   // Form Fields
   const [name, setName] = useState("");
@@ -48,11 +53,37 @@ export default function LabourPage() {
   const isPartner = user.role === USER_ROLE.PARTNER;
 
   const records = response?.data || [];
-  const filteredRecords = records.filter(
-    (r) =>
-      r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  // Compute unique names for datalist
+  const uniqueNames = Array.from(new Set(records.map((r: any) => r.name))).filter(Boolean);
+
+  const filteredRecords = records.filter((r: any) => {
+    // 1. Name Filter
+    if (searchName && !r.name.toLowerCase().includes(searchName.toLowerCase())) return false;
+
+    // 2. Role Filter
+    if (selectedRole && r.role !== selectedRole) return false;
+
+    // 3. Wage Filter
+    const wage = r.dailyWage || 0;
+    if (minDailyWage && wage < parseFloat(minDailyWage)) return false;
+    if (maxDailyWage && wage > parseFloat(maxDailyWage)) return false;
+
+    // 4. Contact Filter
+    if (searchContact && !r.contact.toLowerCase().includes(searchContact.toLowerCase())) return false;
+
+    return true;
+  });
+
+  const handleDownloadPDF = () => {
+    downloadPDF("labour-table-container", `${user?.tenant?.name || "Mill"}_Labour_Report`, {
+      title: t("labour_manage"),
+      subtitle: t("labour_desc"),
+      tenantName: user?.tenant?.name,
+      tenantCode: user?.tenant?.code,
+      language: language,
+    });
+  };
 
   const handleOpenAdd = () => {
     if (isPartner) return;
@@ -137,38 +168,64 @@ export default function LabourPage() {
             {t("labour_desc")}
           </p>
         </div>
-        <div className="flex space-x-3 items-center">
+        <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:space-x-3 sm:w-auto items-center">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Download size={18} />
-            <span>{t("download_report")}</span>
+            <Download size={16} className="shrink-0" />
+            <span className="truncate">{t("download_report")}</span>
           </button>
           <button
             onClick={handleOpenAdd}
             disabled={isPartner}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus size={18} />
-            <span>{t("add_labour")}</span>
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate">{t("add_labour")}</span>
           </button>
         </div>
       </div>
 
       {/* Table Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t("search_placeholder")}
-            className="w-full pl-10 rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-      </div>
+      <LabourFilters
+        draftSearchName={draftSearchName}
+        setDraftSearchName={setDraftSearchName}
+        draftSelectedRole={draftSelectedRole}
+        setDraftSelectedRole={setDraftSelectedRole}
+        draftMinDailyWage={draftMinDailyWage}
+        setDraftMinDailyWage={setDraftMinDailyWage}
+        draftMaxDailyWage={draftMaxDailyWage}
+        setDraftMaxDailyWage={setDraftMaxDailyWage}
+        draftSearchContact={draftSearchContact}
+        setDraftSearchContact={setDraftSearchContact}
+        searchName={searchName}
+        selectedRole={selectedRole}
+        minDailyWage={minDailyWage}
+        maxDailyWage={maxDailyWage}
+        searchContact={searchContact}
+        uniqueNames={uniqueNames}
+        onApplyFilters={() => {
+          setSearchName(draftSearchName);
+          setSelectedRole(draftSelectedRole);
+          setMinDailyWage(draftMinDailyWage);
+          setMaxDailyWage(draftMaxDailyWage);
+          setSearchContact(draftSearchContact);
+        }}
+        onClearFilters={() => {
+          setSearchName("");
+          setSelectedRole("");
+          setMinDailyWage("");
+          setMaxDailyWage("");
+          setSearchContact("");
+
+          setDraftSearchName("");
+          setDraftSelectedRole("");
+          setDraftMinDailyWage("");
+          setDraftMaxDailyWage("");
+          setDraftSearchContact("");
+        }}
+      />
 
       {/* Interactive Table List */}
       {isLoading ? (
@@ -180,207 +237,39 @@ export default function LabourPage() {
       ) : filteredRecords.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-slate-100">
           <UserCheck className="mx-auto text-slate-300 mb-4" size={48} />
-          <h3 className="text-lg font-bold text-slate-800">No Registered Workers</h3>
-          <p className="text-sm text-slate-400 mt-1">No profiles found matching your search term.</p>
+          <h3 className="text-lg font-bold text-slate-800">No Labour Records</h3>
+          <p className="text-sm text-slate-400 mt-1">No transaction items found matching your filters.</p>
         </div>
       ) : (
-        <div id="labour-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{t("full_name")}</th>
-                  <th className="px-6 py-4">{t("designation")}</th>
-                  <th className="px-6 py-4">{t("contact")}</th>
-                  <th className="px-6 py-4">{t("wage")}</th>
-                  <th className="px-6 py-4">{t("present_days")}</th>
-                  <th className="px-6 py-4">{t("total_wages")}</th>
-                  <th className="px-6 py-4">{t("unpaid_dues")}</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-50/60 transition">
-                    <td className="px-6 py-4 font-bold text-slate-900">{rec.name}</td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <div className="flex items-center space-x-2">
-                        <Briefcase size={14} className="text-slate-400" />
-                        <span>{rec.role}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono">
-                      <div className="flex items-center space-x-2">
-                        <Phone size={14} className="text-slate-400" />
-                        <span>{rec.contact}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-700">
-                      Rs. {rec.dailyWage}
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-800 text-center">
-                      {rec.presentDays}
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">
-                      Rs. {(rec.dailyWage * rec.presentDays).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded font-mono font-bold text-xs ${
-                          rec.unpaidDues > 0
-                            ? "bg-red-50 text-red-700 border border-red-100"
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                        }`}
-                      >
-                        Rs. {rec.unpaidDues}
-                      </span>
-                    </td>
-                    {!isPartner && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleOpenEdit(rec)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                            title="Edit Record"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rec.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete Record"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <LabourTable
+          filteredRecords={filteredRecords}
+          isPartner={isPartner}
+          onEdit={handleOpenEdit}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* CRUD Form Dialog Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
-              <h3 className="font-extrabold text-sm">
-                {editingRecord ? "Edit Worker Profile" : "Register Worker Profile"}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
-                <X size={20} />
-              </button>
-            </div>
+      <LabourFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        editingRecord={editingRecord}
+        onSave={handleSave}
+        name={name}
+        setName={setName}
+        role={role}
+        setRole={setRole}
+        dailyWage={dailyWage}
+        setDailyWage={setDailyWage}
+        presentDays={presentDays}
+        setPresentDays={setPresentDays}
+        unpaidDues={unpaidDues}
+        setUnpaidDues={setUnpaidDues}
+        contact={contact}
+        setContact={setContact}
+        isSaving={isCreating || isUpdating}
+      />
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("full_name")}</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Jaspreet Singh"
-                  className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Designation</label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="Machine Operator">Machine Operator</option>
-                    <option value="Loader / Helper">Loader / Helper</option>
-                    <option value="Quality Checker">Quality Checker</option>
-                    <option value="Generator Tech">Generator Tech</option>
-                    <option value="Boiler Supervisor">Boiler Supervisor</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("contact")}</label>
-                  <input
-                    type="text"
-                    required
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="e.g. +91 99999 88888"
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("wage")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={100}
-                    value={dailyWage}
-                    onChange={(e) => setDailyWage(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("present_days")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    max={31}
-                    value={presentDays}
-                    onChange={(e) => setPresentDays(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{t("unpaid_dues")}</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={unpaidDues}
-                    onChange={(e) => setUnpaidDues(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 p-2.5 text-xs focus:border-blue-500 focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-lg border flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500 uppercase font-sans">Total Accumulate Wages:</span>
-                <span className="font-mono font-extrabold text-sm text-slate-900">
-                  Rs. {(dailyWage * presentDays).toLocaleString("en-IN")}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition"
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition shadow-md shadow-blue-500/20"
-                >
-                  {isCreating || isUpdating ? "Saving..." : editingRecord ? t("save_changes") : t("save_changes")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       {/* Custom Delete Confirmation Dialog */}
       <ConfirmModal
         isOpen={deleteTargetId !== null}
