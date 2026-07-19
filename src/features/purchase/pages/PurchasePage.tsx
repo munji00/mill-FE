@@ -138,21 +138,21 @@ export default function PurchasePage() {
             {t("purchases_desc")}
           </p>
         </div>
-        <div className="flex space-x-3 items-center">
+        <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:space-x-3 sm:w-auto items-center">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Download size={18} />
-            <span>{t("download_report")}</span>
+            <Download size={16} className="shrink-0" />
+            <span className="truncate">{t("download_report")}</span>
           </button>
           <button
             onClick={handleOpenAdd}
             disabled={isPartner}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus size={18} />
-            <span>{t("add_purchase")}</span>
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate">{t("add_purchase")}</span>
           </button>
         </div>
       </div>
@@ -185,67 +185,125 @@ export default function PurchasePage() {
           <p className="text-sm text-slate-400 mt-1">No transaction items found matching your filters.</p>
         </div>
       ) : (
-        <div id="purchases-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{t("date")}</th>
-                  <th className="px-6 py-4">{t("item_name")}</th>
-                  <th className="px-6 py-4">{t("supplier_name")}</th>
-                  <th className="px-6 py-4">{t("quantity")} / {t("unit")}</th>
-                  <th className="px-6 py-4">{t("price_per_unit")}</th>
-                  <th className="px-6 py-4">{t("amount")}</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-50/60 transition">
-                    <td className="px-6 py-4 font-semibold text-slate-600 flex items-center space-x-2">
-                      <Calendar size={14} className="text-slate-400" />
-                      <span>{rec.date}</span>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-slate-900">{rec.itemName}</td>
-                    <td className="px-6 py-4 text-slate-600 flex items-center space-x-2">
-                      <Landmark size={14} className="text-slate-400" />
-                      <span>{rec.supplierName}</span>
-                    </td>
-                    <td className="px-6 py-4 font-mono font-semibold text-slate-700">
-                      {rec.quantity} <span className="text-xs text-slate-400 font-sans">{rec.unit}</span>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-600">
-                      Rs. {rec.pricePerUnit}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-slate-900">
-                      Rs. {rec.totalAmount.toLocaleString("en-IN")}
-                    </td>
-                    {!isPartner && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleOpenEdit(rec)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                            title="Edit Record"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rec.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete Record"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
+        <>
+          {/* Desktop Table View */}
+          <div id="purchases-table-container" className="hidden md:block bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
+                    <th className="px-6 py-4">{t("date")}</th>
+                    <th className="px-6 py-4">{t("item_name")}</th>
+                    <th className="px-6 py-4">{t("supplier_name")}</th>
+                    <th className="px-6 py-4">{t("quantity")} / {t("unit")}</th>
+                    <th className="px-6 py-4">{t("price_per_unit")}</th>
+                    <th className="px-6 py-4">{t("amount")}</th>
+                    {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredRecords.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-slate-50/60 transition">
+                      <td className="px-6 py-4 font-semibold text-slate-600 flex items-center space-x-2">
+                        <Calendar size={14} className="text-slate-400" />
+                        <span>{rec.date}</span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-slate-900">{rec.itemName}</td>
+                      <td className="px-6 py-4 text-slate-600 flex items-center space-x-2">
+                        <Landmark size={14} className="text-slate-400" />
+                        <span>{rec.supplierName}</span>
+                      </td>
+                      <td className="px-6 py-4 font-mono font-semibold text-slate-700">
+                        {rec.quantity} <span className="text-xs text-slate-400 font-sans">{rec.unit}</span>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-slate-600">
+                        Rs. {rec.pricePerUnit}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-slate-900">
+                        Rs. {rec.totalAmount.toLocaleString("en-IN")}
+                      </td>
+                      {!isPartner && (
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => handleOpenEdit(rec)}
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                              title="Edit Record"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(rec.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete Record"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile Card List View */}
+          <div className="md:hidden space-y-4">
+            {filteredRecords.map((rec) => (
+              <div key={rec.id} className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm space-y-4 relative">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-sm">{rec.itemName}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-wider flex items-center">
+                      <Calendar size={12} className="mr-1 text-slate-400" /> {rec.date}
+                    </p>
+                  </div>
+                  <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                    Rs. {rec.totalAmount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs border-t border-b border-slate-50 py-3">
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("supplier_name")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block truncate">{rec.supplierName}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("quantity")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block font-mono">
+                      {rec.quantity} <span className="text-[10px] text-slate-400 font-sans">{rec.unit}</span>
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("price_per_unit")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block font-mono">Rs. {rec.pricePerUnit}</span>
+                  </div>
+                </div>
+
+                {!isPartner && (
+                  <div className="flex justify-end space-x-3 pt-1">
+                    <button
+                      onClick={() => handleOpenEdit(rec)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg text-xs font-bold transition cursor-pointer border border-slate-100 hover:border-blue-100"
+                    >
+                      <Edit2 size={14} />
+                      <span>{t("edit")}</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rec.id)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition cursor-pointer border border-slate-100 hover:border-red-100"
+                    >
+                      <Trash2 size={14} />
+                      <span>{t("delete")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* CRUD Form Dialog Modal */}

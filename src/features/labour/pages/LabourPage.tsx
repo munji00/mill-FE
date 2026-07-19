@@ -137,21 +137,21 @@ export default function LabourPage() {
             {t("labour_desc")}
           </p>
         </div>
-        <div className="flex space-x-3 items-center">
+        <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:space-x-3 sm:w-auto items-center">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Download size={18} />
-            <span>{t("download_report")}</span>
+            <Download size={16} className="shrink-0" />
+            <span className="truncate">{t("download_report")}</span>
           </button>
           <button
             onClick={handleOpenAdd}
             disabled={isPartner}
-            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm w-full sm:w-auto"
           >
-            <Plus size={18} />
-            <span>{t("add_labour")}</span>
+            <Plus size={16} className="shrink-0" />
+            <span className="truncate">{t("add_labour")}</span>
           </button>
         </div>
       </div>
@@ -184,83 +184,149 @@ export default function LabourPage() {
           <p className="text-sm text-slate-400 mt-1">No profiles found matching your search term.</p>
         </div>
       ) : (
-        <div id="labour-table-container" className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{t("full_name")}</th>
-                  <th className="px-6 py-4">{t("designation")}</th>
-                  <th className="px-6 py-4">{t("contact")}</th>
-                  <th className="px-6 py-4">{t("wage")}</th>
-                  <th className="px-6 py-4">{t("present_days")}</th>
-                  <th className="px-6 py-4">{t("total_wages")}</th>
-                  <th className="px-6 py-4">{t("unpaid_dues")}</th>
-                  {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-50/60 transition">
-                    <td className="px-6 py-4 font-bold text-slate-900">{rec.name}</td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <div className="flex items-center space-x-2">
-                        <Briefcase size={14} className="text-slate-400" />
-                        <span>{rec.role}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono">
-                      <div className="flex items-center space-x-2">
-                        <Phone size={14} className="text-slate-400" />
-                        <span>{rec.contact}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-700">
-                      Rs. {rec.dailyWage}
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-800 text-center">
-                      {rec.presentDays}
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">
-                      Rs. {(rec.dailyWage * rec.presentDays).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded font-mono font-bold text-xs ${
-                          rec.unpaidDues > 0
-                            ? "bg-red-50 text-red-700 border border-red-100"
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                        }`}
-                      >
-                        Rs. {rec.unpaidDues}
-                      </span>
-                    </td>
-                    {!isPartner && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleOpenEdit(rec)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                            title="Edit Record"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rec.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete Record"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+        <>
+          {/* Desktop Table View */}
+          <div id="labour-table-container" className="hidden md:block bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-900 text-slate-200 text-xs font-bold uppercase tracking-wider">
+                    <th className="px-6 py-4">{t("full_name")}</th>
+                    <th className="px-6 py-4">{t("designation")}</th>
+                    <th className="px-6 py-4">{t("contact")}</th>
+                    <th className="px-6 py-4">{t("wage")}</th>
+                    <th className="px-6 py-4">{t("present_days")}</th>
+                    <th className="px-6 py-4">{t("total_wages")}</th>
+                    <th className="px-6 py-4">{t("unpaid_dues")}</th>
+                    {!isPartner && <th className="px-6 py-4 text-right">{t("actions")}</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredRecords.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-slate-50/60 transition">
+                      <td className="px-6 py-4 font-bold text-slate-900">{rec.name}</td>
+                      <td className="px-6 py-4 text-slate-600">
+                        <div className="flex items-center space-x-2">
+                          <Briefcase size={14} className="text-slate-400" />
+                          <span>{rec.role}</span>
                         </div>
                       </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <td className="px-6 py-4 text-slate-500 font-mono">
+                        <div className="flex items-center space-x-2">
+                          <Phone size={14} className="text-slate-400" />
+                          <span>{rec.contact}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-slate-700">
+                        Rs. {rec.dailyWage}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-slate-800 text-center">
+                        {rec.presentDays}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-slate-900">
+                        Rs. {(rec.dailyWage * rec.presentDays).toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded font-mono font-bold text-xs ${
+                            rec.unpaidDues > 0
+                              ? "bg-red-50 text-red-700 border border-red-100"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                          }`}
+                        >
+                          Rs. {rec.unpaidDues}
+                        </span>
+                      </td>
+                      {!isPartner && (
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => handleOpenEdit(rec)}
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                              title="Edit Record"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(rec.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete Record"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile Card List View */}
+          <div className="md:hidden space-y-4">
+            {filteredRecords.map((rec) => (
+              <div key={rec.id} className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm space-y-4 relative">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-sm">{rec.name}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-wider flex items-center">
+                      <Briefcase size={12} className="mr-1 text-slate-400" /> {rec.role}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex px-2.5 py-1 rounded-lg font-mono font-extrabold text-xs ${
+                      rec.unpaidDues > 0
+                        ? "bg-red-50 text-red-700 border border-red-100"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                    }`}
+                  >
+                    Dues: Rs. {rec.unpaidDues}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs border-t border-b border-slate-50 py-3">
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("contact")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block truncate font-mono">{rec.contact || "Not Configured"}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("wage")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block font-mono">Rs. {rec.dailyWage}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("present_days")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block font-mono">{rec.presentDays} Days</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] block tracking-wide">{t("total_wages")}</span>
+                    <span className="text-slate-700 font-semibold mt-1 block font-mono">Rs. {(rec.dailyWage * rec.presentDays).toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                {!isPartner && (
+                  <div className="flex justify-end space-x-3 pt-1">
+                    <button
+                      onClick={() => handleOpenEdit(rec)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg text-xs font-bold transition cursor-pointer border border-slate-100 hover:border-blue-100"
+                    >
+                      <Edit2 size={14} />
+                      <span>{t("edit")}</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rec.id)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition cursor-pointer border border-slate-100 hover:border-red-100"
+                    >
+                      <Trash2 size={14} />
+                      <span>{t("delete")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* CRUD Form Dialog Modal */}

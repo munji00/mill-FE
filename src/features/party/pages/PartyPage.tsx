@@ -160,9 +160,9 @@ export default function PartyPage() {
         </div>
         <button
           onClick={handleOpenAdd}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer"
+          className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition cursor-pointer w-full sm:w-auto text-xs sm:text-sm"
         >
-          <Plus size={18} />
+          <Plus size={16} className="shrink-0" />
           <span>Provision New Party</span>
         </button>
       </div>
