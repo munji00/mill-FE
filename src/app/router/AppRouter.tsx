@@ -14,6 +14,7 @@ import LabourPage from "@/features/labour/pages/LabourPage";
 import NotificationPage from "@/features/notifications/pages/NotificationPage";
 import PartyPage from "@/features/party/pages/PartyPage";
 import PartnersPage from "@/features/partners/pages/PartnersPage";
+import AnalyticsPage from "@/features/analytics/pages/AnalyticsPage";
 
 import NotFound from "@/components/feedback/NotFound";
 
@@ -131,6 +132,17 @@ function AppRouter() {
             <ProtectedRoute>
               <MainLayout>
                 <PartnersPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={PATHS.ANALYTICS}
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AnalyticsPage />
               </MainLayout>
             </ProtectedRoute>
           }

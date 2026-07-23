@@ -10,6 +10,7 @@ export const PATHS = {
   NOTIFICATIONS: "/notifications",
   PARTY: "/party",
   PARTNERS: "/partners",
+  ANALYTICS: "/analytics",
   PROFILE: "/profile",
   NOT_FOUND: "*",
 } as const;

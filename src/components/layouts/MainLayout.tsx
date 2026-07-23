@@ -20,6 +20,7 @@ import {
   Settings,
   ChevronUp,
   Menu,
+  BarChart2,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { closeSidebar, toggleSidebar } from "@/app/store/slices/uiSlice";
@@ -112,6 +113,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         { path: PATHS.LABOUR, label: t("labour_manage"), icon: Briefcase },
         { path: PATHS.INVENTORY, label: t("inventory"), icon: Layers },
         { path: PATHS.PARTNERS, label: t("partners"), icon: Users },
+        { path: PATHS.ANALYTICS, label: t("analytics"), icon: BarChart2 },
         { path: PATHS.NOTIFICATIONS, label: t("notifications"), icon: Bell },
       ];
 
@@ -156,7 +158,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -164,7 +166,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all ${
+                className={`flex items-center space-x-3 px-4 py-[10px] rounded-lg font-medium transition-all ${
                   isActive
                     ? "bg-blue-50 text-blue-600 shadow-sm"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"

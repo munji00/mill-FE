@@ -22,6 +22,7 @@ const translations: Record<Language, Record<string, string>> = {
     inventory: "Inventory",
     partners: "Partners",
     notifications: "Notifications",
+    analytics: "Analytics",
 
     // Headers & Labels
     app_title: "RICE MILL ERP",
@@ -176,6 +177,7 @@ const translations: Record<Language, Record<string, string>> = {
     inventory: "स्टॉक / इन्वेंटरी",
     partners: "साझेदार विवरण",
     notifications: "सूचनाएं",
+    analytics: "विश्लेषण",
 
     // Headers & Labels
     app_title: "राइस मिल ईआरपी",
@@ -330,6 +332,7 @@ const translations: Record<Language, Record<string, string>> = {
     inventory: "انوینٹری",
     partners: "شراکت دار",
     notifications: "اطلاعات",
+    analytics: "تجزیہ",
 
     // Headers & Labels
     app_title: "رائس مل ای آر پی",
